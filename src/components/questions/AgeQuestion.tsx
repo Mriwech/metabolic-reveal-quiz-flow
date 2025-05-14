@@ -16,6 +16,8 @@ const AgeQuestion = () => {
 
   const handleSelect = (value: string) => {
     updateQuizData('ageGroup', value);
+    // Auto progress to next question
+    setCurrentQuestion(2);
   };
 
   const handleNext = () => {
@@ -39,6 +41,7 @@ const AgeQuestion = () => {
             value={option.value}
             selected={quizData.ageGroup === option.value}
             onClick={() => handleSelect(option.value)}
+            autoConfirm={true}
           />
         ))}
       </div>

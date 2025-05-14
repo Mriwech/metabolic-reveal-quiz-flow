@@ -15,6 +15,8 @@ const ReadinessQuestion = () => {
 
   const handleSelect = (value: string) => {
     updateQuizData('readinessToChange', value);
+    // Auto progress to next question
+    setCurrentQuestion(10); 
   };
 
   const handleNext = () => {
@@ -38,6 +40,7 @@ const ReadinessQuestion = () => {
             value={option.value}
             selected={quizData.readinessToChange === option.value}
             onClick={() => handleSelect(option.value)}
+            autoConfirm={true}
           />
         ))}
       </div>

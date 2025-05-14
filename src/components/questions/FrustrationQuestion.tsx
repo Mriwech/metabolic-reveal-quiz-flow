@@ -15,6 +15,8 @@ const FrustrationQuestion = () => {
 
   const handleSelect = (value: string) => {
     updateQuizData('biggestFrustration', value);
+    // Auto progress to next question
+    setCurrentQuestion(9);
   };
 
   const handleNext = () => {
@@ -38,6 +40,7 @@ const FrustrationQuestion = () => {
             value={option.value}
             selected={quizData.biggestFrustration === option.value}
             onClick={() => handleSelect(option.value)}
+            autoConfirm={true}
           />
         ))}
       </div>

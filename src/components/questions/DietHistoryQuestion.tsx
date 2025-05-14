@@ -15,6 +15,8 @@ const DietHistoryQuestion = () => {
 
   const handleSelect = (value: string) => {
     updateQuizData('failedDiets', value);
+    // Auto progress to next question
+    setCurrentQuestion(7);
   };
 
   const handleNext = () => {
@@ -38,6 +40,7 @@ const DietHistoryQuestion = () => {
             value={option.value}
             selected={quizData.failedDiets === option.value}
             onClick={() => handleSelect(option.value)}
+            autoConfirm={true}
           />
         ))}
       </div>

@@ -26,37 +26,33 @@ const ResultsPage = () => {
   const handleSubmit = () => {
     setSubmitting(true);
     
-    // Simulate API call
-    setTimeout(() => {
-      setSubmitting(false);
-      setCurrentQuestion(12); // Move to VSL page
-      
-      // Save data to localStorage for demonstration
-      localStorage.setItem('quizData', JSON.stringify(quizData));
-      
-      // Log UTM parameters if available
-      const urlParams = new URLSearchParams(window.location.search);
-      const utmSource = urlParams.get('utm_source');
-      const utmMedium = urlParams.get('utm_medium');
-      const utmCampaign = urlParams.get('utm_campaign');
-      
-      console.log('Quiz submitted:', { 
-        ...quizData,
-        utmSource,
-        utmMedium,
-        utmCampaign
-      });
-      
-    }, 1500);
+    // Save data to localStorage for demonstration
+    localStorage.setItem('quizData', JSON.stringify(quizData));
+    
+    // Log UTM parameters if available
+    const urlParams = new URLSearchParams(window.location.search);
+    const utmSource = urlParams.get('utm_source');
+    const utmMedium = urlParams.get('utm_medium');
+    const utmCampaign = urlParams.get('utm_campaign');
+    
+    console.log('Quiz submitted:', { 
+      ...quizData,
+      utmSource,
+      utmMedium,
+      utmCampaign
+    });
+    
+    // Redirect to Mitolyn website
+    window.location.href = "https://mitolyn.com/science/"; 
   };
 
   return (
-    <div className="max-w-xl mx-auto py-6">
+    <div className="max-w-xl mx-auto py-6 px-4">
       <div className="text-center mb-8">
         <div className="inline-block px-4 py-2 rounded-full bg-green-100 text-green-800 font-semibold mb-4">
           CONGRATS! You Qualify
         </div>
-        <h1 className="text-3xl md:text-4xl font-bold text-brand-darkBlue mb-2">
+        <h1 className="text-2xl md:text-4xl font-bold text-brand-darkBlue mb-2">
           Your Personal Fat-Loss Report
         </h1>
         <p className="text-lg text-gray-600">
@@ -66,7 +62,7 @@ const ResultsPage = () => {
       
       <div className="space-y-6 mb-8">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="result-metric">
+          <div className="result-metric p-5">
             <h3 className="text-lg font-semibold">Current Metabolic Age</h3>
             <div className="text-3xl font-bold text-red-600 mt-2">
               {metabolicAge} years
@@ -76,7 +72,7 @@ const ResultsPage = () => {
             </div>
           </div>
           
-          <div className="result-metric">
+          <div className="result-metric p-5">
             <h3 className="text-lg font-semibold">Projected Goal Timeline</h3>
             <div className="text-3xl font-bold text-red-600 mt-2">
               {projectedMonths} months
@@ -90,21 +86,21 @@ const ResultsPage = () => {
         <div className="space-y-4">
           <h3 className="text-xl font-semibold text-brand-darkBlue">Key Metabolic Indicators:</h3>
           
-          <div className="result-metric bad">
+          <div className="result-metric bad p-4">
             <h4 className="font-semibold">Fat-Burning Speed</h4>
             <div className="text-lg font-bold text-red-600 mt-1">
               43% slower than optimal
             </div>
           </div>
           
-          <div className="result-metric bad">
+          <div className="result-metric bad p-4">
             <h4 className="font-semibold">Cellular Energy Production</h4>
             <div className="text-lg font-bold text-red-600 mt-1">
               2.1x below healthy levels
             </div>
           </div>
           
-          <div className="result-metric bad">
+          <div className="result-metric bad p-4">
             <h4 className="font-semibold">Visceral Fat Risk</h4>
             <div className="text-lg font-bold text-red-600 mt-1">
               High

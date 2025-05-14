@@ -8,6 +8,7 @@ interface OptionCardProps {
   selected: boolean;
   image?: string;
   onClick: () => void;
+  autoConfirm?: boolean;
 }
 
 const OptionCard: React.FC<OptionCardProps> = ({ 
@@ -15,15 +16,22 @@ const OptionCard: React.FC<OptionCardProps> = ({
   value, 
   selected, 
   image,
-  onClick 
+  onClick,
+  autoConfirm = false
 }) => {
+  const handleClick = () => {
+    onClick();
+    // If autoConfirm is true, we'll trigger any onClick logic immediately
+    // The parent component will handle the navigation
+  };
+
   return (
     <div 
       className={cn(
-        "option-card",
+        "option-card min-h-[80px] flex items-center justify-center p-6",
         selected && "selected"
       )}
-      onClick={onClick}
+      onClick={handleClick}
     >
       {image && (
         <div className="mb-3">

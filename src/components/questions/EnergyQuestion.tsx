@@ -15,6 +15,8 @@ const EnergyQuestion = () => {
 
   const handleSelect = (value: string) => {
     updateQuizData('energyLevel', value);
+    // Auto progress to next question
+    setCurrentQuestion(8);
   };
 
   const handleNext = () => {
@@ -38,6 +40,7 @@ const EnergyQuestion = () => {
             value={option.value}
             selected={quizData.energyLevel === option.value}
             onClick={() => handleSelect(option.value)}
+            autoConfirm={true}
           />
         ))}
       </div>

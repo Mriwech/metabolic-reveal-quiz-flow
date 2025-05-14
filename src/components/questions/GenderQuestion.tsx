@@ -15,6 +15,8 @@ const GenderQuestion = () => {
 
   const handleSelect = (value: string) => {
     updateQuizData('gender', value);
+    // Auto progress to next question
+    setCurrentQuestion(1);
   };
 
   const handleNext = () => {
@@ -35,6 +37,7 @@ const GenderQuestion = () => {
             selected={quizData.gender === option.value}
             image={option.image}
             onClick={() => handleSelect(option.value)}
+            autoConfirm={true}
           />
         ))}
       </div>
