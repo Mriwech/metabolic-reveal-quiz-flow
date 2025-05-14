@@ -8,9 +8,9 @@ const ReadinessQuestion = () => {
   const { quizData, updateQuizData, setCurrentQuestion } = useQuiz();
   
   const options = [
-    { label: 'I'm ready now', value: 'Immediately' },
+    { label: "I'm ready now", value: 'Immediately' },
     { label: 'In the next month', value: 'In 1 month' },
-    { label: 'I'm not sure yet', value: 'Not sure' },
+    { label: "I'm not sure yet", value: 'Not sure' },
   ];
 
   const handleSelect = (value: string) => {
