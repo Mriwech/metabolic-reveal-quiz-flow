@@ -3,7 +3,7 @@ import React from 'react';
 import { useQuiz } from '@/context/QuizContext';
 import OptionCard from '../OptionCard';
 import QuizNavigation from '../QuizNavigation';
-import { Female, Male, User } from 'lucide-react';
+import { User } from 'lucide-react';
 
 const GenderQuestion = () => {
   const { quizData, updateQuizData, setCurrentQuestion } = useQuiz();
@@ -12,17 +12,17 @@ const GenderQuestion = () => {
     { 
       label: 'Female', 
       value: 'female', 
-      icon: <Female className="h-12 w-12 text-pink-500" /> 
+      icon: <div className="flex items-center justify-center h-12 w-12 rounded-full bg-pink-100"><span className="text-pink-500 text-2xl">♀️</span></div> 
     },
     { 
       label: 'Male', 
       value: 'male', 
-      icon: <Male className="h-12 w-12 text-blue-500" /> 
+      icon: <div className="flex items-center justify-center h-12 w-12 rounded-full bg-blue-100"><span className="text-blue-500 text-2xl">♂️</span></div> 
     },
     { 
       label: 'Other', 
       value: 'other', 
-      icon: <User className="h-12 w-12 text-purple-500" />
+      icon: <User className="h-12 w-12 p-2 rounded-full bg-purple-100 text-purple-500" />
     },
   ];
 
