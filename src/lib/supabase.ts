@@ -1,19 +1,12 @@
 
 import { createClient } from '@supabase/supabase-js';
 
-// Default fallback values (for development - these won't work in production)
-const DEFAULT_SUPABASE_URL = 'https://your-project-id.supabase.co';
-const DEFAULT_SUPABASE_ANON_KEY = 'your-anon-key';
-
-// Get environment variables or use fallback for development
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || DEFAULT_SUPABASE_URL;
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || DEFAULT_SUPABASE_ANON_KEY;
-
-// Create a mock client if environment variables are not set
-const isMockClient = supabaseUrl === DEFAULT_SUPABASE_URL || supabaseAnonKey === DEFAULT_SUPABASE_ANON_KEY;
+// Supabase project configuration
+const SUPABASE_URL = 'https://dzbjugabndesaikxgtpi.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR6Ymp1Z2FibmRlc2Fpa3hndHBpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDcyNTU4ODgsImV4cCI6MjA2MjgzMTg4OH0.l4MQSMXnweC1I5dw5KjcgGXqZxyOxyLMVXQe24lQGkc';
 
 // Create the Supabase client
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 // Type for the quiz submissions
 export type QuizSubmission = {
@@ -39,12 +32,7 @@ export type QuizSubmission = {
 // Function to submit quiz data to Supabase
 export const submitQuizData = async (data: QuizSubmission): Promise<{ error: any | null, success: boolean }> => {
   try {
-    // If we're using mock client, just log the data and simulate success
-    if (isMockClient) {
-      console.log('MOCK: Quiz data would be submitted to Supabase:', data);
-      console.warn('Supabase environment variables not configured. Using mock client.');
-      return { error: null, success: true };
-    }
+    console.log('Submitting quiz data to Supabase:', data);
     
     // Real submission to Supabase
     const { error } = await supabase
@@ -56,6 +44,7 @@ export const submitQuizData = async (data: QuizSubmission): Promise<{ error: any
       return { error, success: false };
     }
     
+    console.log('Quiz data submitted successfully!');
     return { error: null, success: true };
   } catch (err) {
     console.error('Exception submitting quiz data:', err);
