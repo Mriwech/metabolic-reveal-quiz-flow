@@ -59,7 +59,7 @@ const ResultsPage = () => {
       const sessionId = localStorage.getItem('quiz_session_id') || `session_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
       localStorage.setItem('quiz_session_id', sessionId);
       
-      // Save to Supabase
+      // Ensure all required fields are present and correctly typed
       const quizSubmission = {
         session_id: sessionId,
         utm_source: utmSource || trafficSource || '',
@@ -67,24 +67,26 @@ const ResultsPage = () => {
         utm_campaign: utmCampaign || campaign || '',
         utm_term: utmTerm || '',
         utm_content: utmContent || creative || '',
-        gender: quizData.gender,
-        age_group: quizData.ageGroup,
-        current_weight: quizData.currentWeight,
+        gender: quizData.gender || 'not_specified',
+        age_group: quizData.ageGroup || 'not_specified',
+        current_weight: Number(quizData.currentWeight) || 0,
         height_ft: heightFt,
         height_in: heightIn,
-        target_weight: quizData.targetWeight,
+        target_weight: Number(quizData.targetWeight) || 0,
         quiz_responses: {
-          stubbornFatAreas: quizData.stubbornFatAreas,
-          failedDiets: quizData.failedDiets,
-          energyLevel: quizData.energyLevel,
-          biggestFrustration: quizData.biggestFrustration,
-          readinessToChange: quizData.readinessToChange
+          stubbornFatAreas: quizData.stubbornFatAreas || [],
+          failedDiets: quizData.failedDiets || 'not_specified',
+          energyLevel: quizData.energyLevel || 'not_specified',
+          biggestFrustration: quizData.biggestFrustration || 'not_specified',
+          readinessToChange: quizData.readinessToChange || 'not_specified'
         },
-        metabolic_age: metabolicAge,
+        metabolic_age: metabolicAge || 0,
         fat_burning_speed: "43% slower than optimal",
         cellular_energy_production: "2.1x below healthy levels",
-        email: quizData.email
+        email: quizData.email || ''
       };
+      
+      console.log("About to submit quiz data:", quizSubmission);
       
       // Save to localStorage for backup
       localStorage.setItem('quizData', JSON.stringify(quizData));
@@ -97,6 +99,7 @@ const ResultsPage = () => {
           description: "Redirecting you to your personalized solution...",
           icon: <Check className="h-4 w-4" />
         });
+        console.log("Data submission successful!");
       } else {
         console.error("Error submitting data:", error);
         // We still redirect even if there's an error with Supabase
@@ -119,7 +122,9 @@ const ResultsPage = () => {
       if (creative) redirectUrl += `&creative=${encodeURIComponent(creative)}`;
       
       // Add email to the URL
-      redirectUrl += `&email=${encodeURIComponent(quizData.email)}`;
+      redirectUrl += `&email=${encodeURIComponent(quizData.email || '')}`;
+      
+      console.log("Redirecting to:", redirectUrl);
       
       // Redirect to Mitolyn website after a short delay
       setTimeout(() => {
