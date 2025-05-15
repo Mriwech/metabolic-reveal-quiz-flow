@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useQuiz } from '@/context/QuizContext';
 import { Button } from '@/components/ui/button';
@@ -121,8 +120,7 @@ const ResultsPage = () => {
       if (ad) redirectUrl += `&cbaff=${encodeURIComponent(ad)}`;
       if (creative) redirectUrl += `&creative=${encodeURIComponent(creative)}`;
       
-      // Add email to the URL
-      redirectUrl += `&email=${encodeURIComponent(quizData.email || '')}`;
+      // L'email a été supprimé des paramètres de redirection comme demandé
       
       console.log("Redirecting to:", redirectUrl);
       
