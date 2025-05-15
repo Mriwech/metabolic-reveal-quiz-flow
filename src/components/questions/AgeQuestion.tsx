@@ -8,10 +8,10 @@ const AgeQuestion = () => {
   const { quizData, updateQuizData, setCurrentQuestion } = useQuiz();
   
   const options = [
-    { label: 'Under 30', value: 'Under 30' },
-    { label: '30-45', value: '30-45' },
-    { label: '45-60', value: '45-60' },
-    { label: '60+', value: '60+' },
+    { label: 'Under 30', value: 'Under 30', icon: '🌱' },
+    { label: '30-45', value: '30-45', icon: '🌿' },
+    { label: '45-60', value: '45-60', icon: '🍂' },
+    { label: '60+', value: '60+', icon: '🌳' },
   ];
 
   const handleSelect = (value: string) => {
@@ -31,6 +31,7 @@ const AgeQuestion = () => {
   return (
     <div>
       <h2 className="text-2xl font-semibold mb-6 text-center">
+        <span className="mr-2">🗓️</span>
         What is your age group?
       </h2>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
@@ -42,6 +43,7 @@ const AgeQuestion = () => {
             selected={quizData.ageGroup === option.value}
             onClick={() => handleSelect(option.value)}
             autoConfirm={true}
+            icon={<span className="text-3xl">{option.icon}</span>}
           />
         ))}
       </div>

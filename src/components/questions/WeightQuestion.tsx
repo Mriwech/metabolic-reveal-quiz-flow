@@ -36,6 +36,7 @@ const WeightQuestion = () => {
   return (
     <div>
       <h2 className="text-2xl font-semibold mb-6 text-center">
+        <span className="mr-2">⚖️</span>
         What is your current weight?
       </h2>
       <div className="max-w-xs mx-auto">

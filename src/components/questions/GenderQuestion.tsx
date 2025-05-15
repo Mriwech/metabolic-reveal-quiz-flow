@@ -3,14 +3,27 @@ import React from 'react';
 import { useQuiz } from '@/context/QuizContext';
 import OptionCard from '../OptionCard';
 import QuizNavigation from '../QuizNavigation';
+import { GenderFemale, GenderMale } from 'lucide-react';
 
 const GenderQuestion = () => {
   const { quizData, updateQuizData, setCurrentQuestion } = useQuiz();
   
   const options = [
-    { label: 'Female', value: 'female', image: '/placeholder.svg' },
-    { label: 'Male', value: 'male', image: '/placeholder.svg' },
-    { label: 'Other', value: 'other', image: '/placeholder.svg' },
+    { 
+      label: 'Female', 
+      value: 'female', 
+      icon: <GenderFemale className="h-12 w-12 text-pink-500" /> 
+    },
+    { 
+      label: 'Male', 
+      value: 'male', 
+      icon: <GenderMale className="h-12 w-12 text-blue-500" /> 
+    },
+    { 
+      label: 'Other', 
+      value: 'other', 
+      icon: <span className="text-4xl">⭐</span>
+    },
   ];
 
   const handleSelect = (value: string) => {
@@ -26,6 +39,7 @@ const GenderQuestion = () => {
   return (
     <div>
       <h2 className="text-2xl font-semibold mb-6 text-center">
+        <span className="mr-2">👤</span>
         Select your gender
       </h2>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
@@ -38,6 +52,7 @@ const GenderQuestion = () => {
             image={option.image}
             onClick={() => handleSelect(option.value)}
             autoConfirm={true}
+            icon={option.icon}
           />
         ))}
       </div>

@@ -14,7 +14,6 @@ import FrustrationQuestion from './questions/FrustrationQuestion';
 import ReadinessQuestion from './questions/ReadinessQuestion';
 import AnalyzingPage from './AnalyzingPage';
 import ResultsPage from './ResultsPage';
-import VSLPage from './VSLPage';
 
 const Quiz = () => {
   const { currentQuestion } = useQuiz();
@@ -34,7 +33,6 @@ const Quiz = () => {
       case 9: return <ReadinessQuestion />;
       case 10: return <AnalyzingPage />;
       case 11: return <ResultsPage />;
-      case 12: return <VSLPage />;
       default: return <GenderQuestion />;
     }
   };

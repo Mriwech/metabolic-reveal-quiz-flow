@@ -41,6 +41,7 @@ const TargetWeightQuestion = () => {
   return (
     <div>
       <h2 className="text-2xl font-semibold mb-6 text-center">
+        <span className="mr-2">🎯</span>
         What is your target weight?
       </h2>
       <div className="max-w-xs mx-auto">
