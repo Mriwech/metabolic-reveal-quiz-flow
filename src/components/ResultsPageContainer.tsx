@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useQuiz } from '@/context/QuizContext';
 import { useResultsSubmission } from '@/hooks/useResultsSubmission';
 import ResultsHeader from './results/ResultsHeader';
@@ -9,10 +9,15 @@ import ResultsSummary from './results/ResultsSummary';
 import EmailForm from './results/EmailForm';
 
 const ResultsPageContainer = () => {
-  const { quizData, calculateMetabolicAge, calculateProjectedMonths, isUrgent } = useQuiz();
+  const { quizData, calculateMetabolicAge, calculateProjectedMonths, isUrgent, updateQuizData } = useQuiz();
   const { emailValid, submitting, showLoader, handleEmailChange, handleSubmit } = useResultsSubmission();
   
-  const metabolicAge = calculateMetabolicAge();
+  // Calculate and set metabolic age when component mounts
+  useEffect(() => {
+    const metabolicAge = calculateMetabolicAge();
+    updateQuizData('metabolicAge', metabolicAge);
+  }, [calculateMetabolicAge, updateQuizData]);
+  
   const projectedMonths = calculateProjectedMonths();
 
   return (
@@ -24,7 +29,7 @@ const ResultsPageContainer = () => {
       {!showLoader && (
         <>
           <MetabolicMetrics 
-            metabolicAge={metabolicAge} 
+            metabolicAge={quizData.metabolicAge || 0} 
             projectedMonths={projectedMonths} 
           />
           
