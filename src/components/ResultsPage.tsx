@@ -94,6 +94,14 @@ const ResultsPage = () => {
       // Submit to Supabase
       const { success, error } = await submitQuizData(quizSubmission);
       
+      console.log("Sending email confirmation with params:", {
+        email: quizData.email,
+        firstName: "",
+        utmSource: utmSource || '',
+        utmCampaign: utmCampaign || '',
+        utmContent: utmContent || ''
+      });
+      
       // Send confirmation email via Edge Function
       const sendEmailResponse = await fetch("https://dzbjugabndesaikxgtpi.supabase.co/functions/v1/send-confirmation-email", {
         method: "POST",
@@ -102,7 +110,7 @@ const ResultsPage = () => {
         },
         body: JSON.stringify({
           email: quizData.email,
-          firstName: "", // We haven't collected first name, so leave empty
+          firstName: "",
           utmSource: utmSource || '',
           utmCampaign: utmCampaign || '',
           utmContent: utmContent || ''
@@ -110,30 +118,37 @@ const ResultsPage = () => {
       });
       
       // Check if email was sent successfully
-      const emailResult = await sendEmailResponse.json();
+      let emailResult;
+      try {
+        emailResult = await sendEmailResponse.json();
+        console.log("Email response:", emailResult);
+      } catch (e) {
+        console.error("Could not parse email response:", e);
+        emailResult = { error: "Could not parse response" };
+      }
       
       if (sendEmailResponse.ok) {
         toast.success("Check your email!", {
-          description: "Your full metabolic report has been sent",
-          icon: <Check className="h-4 w-4" />
+          description: "Your full metabolic report has been sent"
         });
         console.log("Email sent successfully:", emailResult);
       } else {
         console.error("Error sending email:", emailResult);
+        toast.error("Could not send email report", {
+          description: "But we'll still redirect you to your results"
+        });
       }
       
       if (success) {
         toast.success("Data submitted successfully!", {
-          description: "Redirecting you to your personalized solution...",
-          icon: <Check className="h-4 w-4" />
+          description: "Redirecting you to your personalized solution..."
         });
         console.log("Data submission successful!");
       } else {
         console.error("Error submitting data:", error);
         // We still redirect even if there's an error with Supabase
         toast.error("Submission had some issues, but we'll still redirect you", {
-          description: "Please check your connection",
-          icon: <AlertCircle className="h-4 w-4" />
+          description: "Please check your connection"
         });
       }
       
@@ -145,7 +160,7 @@ const ResultsPage = () => {
       } else {
         // Build the redirect URL using our utility function
         redirectUrl = buildRedirectUrl(
-          utmSource,
+          utmSource || "direct",
           utmCampaign,
           utmContent
         );
@@ -163,8 +178,7 @@ const ResultsPage = () => {
       setSubmitting(false);
       setShowLoader(false);
       toast.error("Something went wrong", {
-        description: "Please try again later",
-        icon: <AlertCircle className="h-4 w-4" />
+        description: "Please try again later"
       });
     }
   };

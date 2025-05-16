@@ -24,7 +24,29 @@ serve(async (req) => {
   }
 
   try {
-    const { email, firstName, utmSource, utmCampaign, utmContent } = await req.json() as EmailRequestBody;
+    // Décodage du corps de la requête
+    const requestText = await req.text();
+    console.log("Raw request body:", requestText);
+    
+    let requestData;
+    try {
+      requestData = JSON.parse(requestText);
+      console.log("Parsed request data:", requestData);
+    } catch (parseError) {
+      console.error("JSON parsing error:", parseError);
+      return new Response(
+        JSON.stringify({ error: "Invalid JSON in request body" }),
+        { 
+          status: 400, 
+          headers: { 
+            "Content-Type": "application/json",
+            ...corsHeaders
+          } 
+        }
+      );
+    }
+    
+    const { email, firstName, utmSource, utmCampaign, utmContent } = requestData as EmailRequestBody;
 
     if (!email) {
       return new Response(
@@ -179,7 +201,26 @@ serve(async (req) => {
       </html>
     `;
 
+    // Vérifier que la clé API SendGrid est disponible
+    if (!SENDGRID_API_KEY) {
+      console.error("SendGrid API key is not configured");
+      return new Response(
+        JSON.stringify({ 
+          error: "Email service configuration error", 
+          details: "SendGrid API key is missing" 
+        }),
+        { 
+          status: 500, 
+          headers: { 
+            "Content-Type": "application/json",
+            ...corsHeaders
+          } 
+        }
+      );
+    }
+
     // Préparation de la requête vers l'API SendGrid
+    // Utilisation d'une adresse email vérifiée pour l'expéditeur
     const sendgridPayload = {
       personalizations: [
         {
@@ -188,7 +229,7 @@ serve(async (req) => {
         },
       ],
       from: { 
-        email: "report@mitolyn.com",
+        email: "onboarding@resend.dev",  // Utiliser une adresse vérifiée par SendGrid
         name: "Mitolyn Metabolic Report"
       },
       content: [
@@ -198,6 +239,8 @@ serve(async (req) => {
         },
       ],
     };
+
+    console.log("Sending email with payload:", JSON.stringify(sendgridPayload));
 
     // Envoi de l'email via SendGrid API
     const sendgridResponse = await fetch("https://api.sendgrid.com/v3/mail/send", {
@@ -210,12 +253,26 @@ serve(async (req) => {
     });
 
     if (!sendgridResponse.ok) {
-      const errorDetails = await sendgridResponse.text();
-      console.error("SendGrid API error:", errorDetails);
-      throw new Error(`SendGrid API error: ${sendgridResponse.status}`);
+      const errorText = await sendgridResponse.text();
+      console.error("SendGrid API error:", errorText);
+      
+      return new Response(
+        JSON.stringify({ 
+          error: "Failed to send email via SendGrid", 
+          status: sendgridResponse.status,
+          details: errorText 
+        }),
+        { 
+          status: 500, 
+          headers: { 
+            "Content-Type": "application/json",
+            ...corsHeaders
+          } 
+        }
+      );
     }
 
-    // Réponse de succès
+    // Réponse de succès avec l'URL de redirection
     return new Response(
       JSON.stringify({ 
         success: true,
