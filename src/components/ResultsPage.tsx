@@ -1,46 +1,24 @@
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState } from 'react';
 import { useQuiz } from '@/context/QuizContext';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import { submitQuizData } from '@/lib/supabase';
-import { Check, AlertCircle, Loader2 } from 'lucide-react';
-import Lottie from 'react-lottie';
-import * as animationData from '@/assets/analysis.json';
+import { Check, AlertCircle } from 'lucide-react';
+import ResultsHeader from './results/ResultsHeader';
+import LoadingAnimation from './results/LoadingAnimation';
+import MetabolicMetrics from './results/MetabolicMetrics';
+import ResultsSummary from './results/ResultsSummary';
+import EmailForm from './results/EmailForm';
+import { buildRedirectUrl } from '@/utils/redirectUtils';
 
 const ResultsPage = () => {
   const { quizData, updateQuizData, calculateMetabolicAge, calculateProjectedMonths, isHighMotivation, isUrgent } = useQuiz();
   const [emailValid, setEmailValid] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [showLoader, setShowLoader] = useState(false);
-  // Use refs to handle animation safely
-  const lottieRef = useRef(null);
   
   const metabolicAge = calculateMetabolicAge();
   const projectedMonths = calculateProjectedMonths();
-  
-  // Configuration de l'animation Lottie - Using a simpler config
-  const defaultOptions = {
-    loop: true,
-    autoplay: true,
-    // Use a functional approach to manage the animation data
-    animationData: JSON.parse(JSON.stringify(animationData)),
-    rendererSettings: {
-      preserveAspectRatio: 'xMidYMid slice'
-    }
-  };
-  
-  // Cleanup the animation when component unmounts
-  useEffect(() => {
-    return () => {
-      if (lottieRef.current) {
-        // Just ensure ref is cleared, the animation will be destroyed automatically
-        lottieRef.current = null;
-      }
-    };
-  }, []);
   
   const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const email = e.target.value;
@@ -126,7 +104,7 @@ const ResultsPage = () => {
       // Submit to Supabase
       const { success, error } = await submitQuizData(quizSubmission);
       
-      // Envoyer l'email via notre fonction Edge Supabase
+      // Send confirmation email via Edge Function
       const sendEmailResponse = await fetch("https://dzbjugabndesaikxgtpi.supabase.co/functions/v1/send-confirmation-email", {
         method: "POST",
         headers: {
@@ -134,7 +112,7 @@ const ResultsPage = () => {
         },
         body: JSON.stringify({
           email: quizData.email,
-          firstName: "", // Nous n'avons pas collecté le prénom, donc on laisse vide
+          firstName: "", // We haven't collected first name, so leave empty
           utmSource: utmSource || trafficSource || '',
           utmMedium: utmMedium || trafficType || '',
           utmCampaign: utmCampaign || campaign || '',
@@ -142,7 +120,7 @@ const ResultsPage = () => {
         })
       });
       
-      // Vérifier si l'envoi de l'email a réussi
+      // Check if email was sent successfully
       const emailResult = await sendEmailResponse.json();
       
       if (sendEmailResponse.ok) {
@@ -176,21 +154,20 @@ const ResultsPage = () => {
       if (emailResult && emailResult.redirectUrl) {
         redirectUrl = emailResult.redirectUrl;
       } else {
-        // Original redirect URL construction using conversion des paramètres UTM → ClickBank
-        redirectUrl = "https://mitolyn.com/science/?shield=34006jve54p94p7hmhxf2g7wbe";
-        
-        // Map Facebook parameters to ClickBank parameters
-        if (utmSource) redirectUrl += `&tid=${encodeURIComponent(utmSource)}`;
-        if (trafficType) redirectUrl += `&utm_medium=${encodeURIComponent(trafficType)}`;
-        
-        // Si la source est un email, on set traffic_source=email
-        const sourceValue = utmSource === 'email' || !utmSource ? 'email' : utmSource;
-        redirectUrl += `&traffic_source=${encodeURIComponent(sourceValue)}`;
-        
-        if (campaign) redirectUrl += `&cbname=${encodeURIComponent(campaign)}`;
-        if (adgroup) redirectUrl += `&cbfid=${encodeURIComponent(adgroup)}`;
-        if (ad) redirectUrl += `&cbaff=${encodeURIComponent(ad)}`;
-        if (creative) redirectUrl += `&creative=${encodeURIComponent(creative)}`;
+        // Build the redirect URL using our utility function
+        redirectUrl = buildRedirectUrl(
+          utmSource,
+          utmMedium,
+          utmCampaign,
+          utmTerm,
+          utmContent,
+          trafficType,
+          trafficSource,
+          campaign,
+          adgroup,
+          ad,
+          creative
+        );
       }
       
       console.log("Redirecting to:", redirectUrl);
@@ -213,158 +190,28 @@ const ResultsPage = () => {
 
   return (
     <div className="max-w-xl mx-auto py-6 px-4">
-      <div className="text-center mb-8">
-        <div className="inline-block px-4 py-2 rounded-full bg-green-100 text-green-800 font-semibold mb-4">
-          🎉 CONGRATS! You Qualify 🎉
-        </div>
-        <h1 className="text-2xl md:text-4xl font-bold text-brand-darkBlue mb-2">
-          Your Personal Fat-Loss Report
-        </h1>
-        <p className="text-lg text-gray-600">
-          We've identified your unique metabolic profile
-        </p>
-        
-        {showLoader && (
-          <div className="my-6 flex justify-center">
-            <div className="w-40 h-40">
-              {/* Conditionally render the Lottie component to avoid reinitialization issues */}
-              <Lottie 
-                options={defaultOptions}
-                height={160}
-                width={160}
-                isClickToPauseDisabled={true}
-                ref={lottieRef}
-              />
-            </div>
-          </div>
-        )}
-      </div>
+      <ResultsHeader showLoader={showLoader} />
+      
+      {showLoader && <LoadingAnimation />}
       
       {!showLoader && (
-        <div className="space-y-6 mb-8">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="result-metric p-5">
-              <h3 className="text-lg font-semibold">
-                <span className="mr-2">⏳</span>
-                Current Metabolic Age
-              </h3>
-              <div className="text-3xl font-bold text-red-600 mt-2">
-                {metabolicAge} years
-              </div>
-              <div className="text-sm text-gray-600 mt-1">
-                {metabolicAge - 10}+ years above ideal
-              </div>
-            </div>
-            
-            <div className="result-metric p-5">
-              <h3 className="text-lg font-semibold">
-                <span className="mr-2">🗓️</span>
-                Projected Goal Timeline
-              </h3>
-              <div className="text-3xl font-bold text-red-600 mt-2">
-                {projectedMonths} months
-              </div>
-              <div className="text-sm text-gray-600 mt-1">
-                with diet & exercise alone
-              </div>
-            </div>
-          </div>
+        <>
+          <MetabolicMetrics 
+            metabolicAge={metabolicAge} 
+            projectedMonths={projectedMonths} 
+          />
           
-          <div className="space-y-4">
-            <h3 className="text-xl font-semibold text-brand-darkBlue">
-              <span className="mr-2">📊</span>
-              Key Metabolic Indicators:
-            </h3>
-            
-            <div className="result-metric bad p-4">
-              <h4 className="font-semibold">
-                <span className="mr-2">🔥</span>
-                Fat-Burning Speed
-              </h4>
-              <div className="text-lg font-bold text-red-600 mt-1">
-                43% slower than optimal
-              </div>
-            </div>
-            
-            <div className="result-metric bad p-4">
-              <h4 className="font-semibold">
-                <span className="mr-2">⚡</span>
-                Cellular Energy Production
-              </h4>
-              <div className="text-lg font-bold text-red-600 mt-1">
-                2.1x below healthy levels
-              </div>
-            </div>
-            
-            <div className="result-metric bad p-4">
-              <h4 className="font-semibold">
-                <span className="mr-2">⚠️</span>
-                Visceral Fat Risk
-              </h4>
-              <div className="text-lg font-bold text-red-600 mt-1">
-                High
-              </div>
-            </div>
-          </div>
-        </div>
+          <ResultsSummary isUrgent={isUrgent} />
+        </>
       )}
       
-      {!showLoader && (
-        <div className="bg-brand-lightBlue p-6 rounded-lg mb-8">
-          <h3 className="text-xl font-semibold mb-3">
-            <span className="mr-2">💡</span>
-            What This Means:
-          </h3>
-          <p className="text-gray-800 mb-4">
-            Your quiz results indicate a rare mitochondrial deficiency—the root cause of stubborn fat. 
-            <span className="font-semibold"> But there's hope...</span>
-          </p>
-          <p className={`${isUrgent ? 'text-red-600' : 'text-brand-blue'} font-bold`}>
-            {isUrgent 
-              ? "⏰ TIME-SENSITIVE: Your profile matches those who have seen dramatic improvements with our specialized approach."
-              : "✨ Your profile matches those who have seen excellent results with our specialized approach."}
-          </p>
-        </div>
-      )}
-      
-      <div className="bg-gradient-to-r from-brand-teal to-brand-blue text-white p-6 rounded-lg">
-        <h3 className="text-xl font-semibold mb-3">
-          <span className="mr-2">📧</span>
-          Enter your email to unlock your FULL report:
-        </h3>
-        <p className="mb-4">Complete with 3-step solution blueprint tailored to your metabolism</p>
-        
-        <div className="space-y-4">
-          <div>
-            <Label htmlFor="email" className="text-white">Email Address</Label>
-            <Input
-              id="email"
-              type="email"
-              className="bg-white text-black mt-1"
-              placeholder="Your email address"
-              value={quizData.email || ''}
-              onChange={handleEmailChange}
-            />
-          </div>
-          
-          <Button 
-            onClick={handleSubmit}
-            disabled={!emailValid || submitting}
-            className="w-full bg-yellow-400 hover:bg-yellow-500 text-black font-bold text-base sm:text-lg py-6 px-4 max-w-full whitespace-normal h-auto flex items-center justify-center space-x-2"
-          >
-            {submitting ? (
-              <>
-                <Loader2 className="h-5 w-5 animate-spin" />
-                <span>Processing...</span>
-              </>
-            ) : "SEND MY REPORT & WATCH VIDEO"}
-          </Button>
-          
-          <div className="text-xs text-center opacity-75">
-            Your privacy is protected. We will never spam you or sell your data.
-          </div>
-        </div>
-      </div>
+      <EmailForm 
+        email={quizData.email || ''}
+        emailValid={emailValid}
+        submitting={submitting}
+        handleEmailChange={handleEmailChange}
+        handleSubmit={handleSubmit}
+      />
     </div>
   );
 };
