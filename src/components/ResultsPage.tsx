@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useQuiz } from '@/context/QuizContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -11,23 +11,36 @@ import Lottie from 'react-lottie';
 import * as animationData from '@/assets/analysis.json';
 
 const ResultsPage = () => {
-  const { quizData, updateQuizData, setCurrentQuestion, isHighMotivation, isUrgent, calculateMetabolicAge, calculateProjectedMonths } = useQuiz();
+  const { quizData, updateQuizData, calculateMetabolicAge, calculateProjectedMonths, isHighMotivation, isUrgent } = useQuiz();
   const [emailValid, setEmailValid] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [showLoader, setShowLoader] = useState(false);
+  // Use refs to handle animation safely
+  const lottieRef = useRef(null);
   
   const metabolicAge = calculateMetabolicAge();
   const projectedMonths = calculateProjectedMonths();
   
-  // Configuration de l'animation Lottie
+  // Configuration de l'animation Lottie - Using a simpler config
   const defaultOptions = {
     loop: true,
     autoplay: true,
-    animationData: animationData,
+    // Use a functional approach to manage the animation data
+    animationData: JSON.parse(JSON.stringify(animationData)),
     rendererSettings: {
       preserveAspectRatio: 'xMidYMid slice'
     }
   };
+  
+  // Cleanup the animation when component unmounts
+  useEffect(() => {
+    return () => {
+      if (lottieRef.current) {
+        // Just ensure ref is cleared, the animation will be destroyed automatically
+        lottieRef.current = null;
+      }
+    };
+  }, []);
   
   const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const email = e.target.value;
@@ -178,8 +191,6 @@ const ResultsPage = () => {
         if (adgroup) redirectUrl += `&cbfid=${encodeURIComponent(adgroup)}`;
         if (ad) redirectUrl += `&cbaff=${encodeURIComponent(ad)}`;
         if (creative) redirectUrl += `&creative=${encodeURIComponent(creative)}`;
-        
-        // L'email a été supprimé des paramètres de redirection comme demandé
       }
       
       console.log("Redirecting to:", redirectUrl);
@@ -216,7 +227,14 @@ const ResultsPage = () => {
         {showLoader && (
           <div className="my-6 flex justify-center">
             <div className="w-40 h-40">
-              <Lottie options={defaultOptions} />
+              {/* Conditionally render the Lottie component to avoid reinitialization issues */}
+              <Lottie 
+                options={defaultOptions}
+                height={160}
+                width={160}
+                isClickToPauseDisabled={true}
+                ref={lottieRef}
+              />
             </div>
           </div>
         )}
@@ -324,7 +342,7 @@ const ResultsPage = () => {
               type="email"
               className="bg-white text-black mt-1"
               placeholder="Your email address"
-              value={quizData.email}
+              value={quizData.email || ''}
               onChange={handleEmailChange}
             />
           </div>
