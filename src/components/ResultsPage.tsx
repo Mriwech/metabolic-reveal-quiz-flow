@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useQuiz } from '@/context/QuizContext';
 import { Button } from '@/components/ui/button';
@@ -5,15 +6,28 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import { submitQuizData } from '@/lib/supabase';
-import { Check, AlertCircle } from 'lucide-react';
+import { Check, AlertCircle, Loader2 } from 'lucide-react';
+import Lottie from 'react-lottie';
+import * as animationData from '@/assets/analysis.json';
 
 const ResultsPage = () => {
   const { quizData, updateQuizData, setCurrentQuestion, isHighMotivation, isUrgent, calculateMetabolicAge, calculateProjectedMonths } = useQuiz();
   const [emailValid, setEmailValid] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [showLoader, setShowLoader] = useState(false);
   
   const metabolicAge = calculateMetabolicAge();
   const projectedMonths = calculateProjectedMonths();
+  
+  // Configuration de l'animation Lottie
+  const defaultOptions = {
+    loop: true,
+    autoplay: true,
+    animationData: animationData,
+    rendererSettings: {
+      preserveAspectRatio: 'xMidYMid slice'
+    }
+  };
   
   const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const email = e.target.value;
@@ -25,7 +39,13 @@ const ResultsPage = () => {
   };
   
   const handleSubmit = async () => {
+    if (!emailValid) {
+      toast.error("Please enter a valid email address");
+      return;
+    }
+    
     setSubmitting(true);
+    setShowLoader(true);
     
     try {
       // Parse height into feet and inches
@@ -93,6 +113,35 @@ const ResultsPage = () => {
       // Submit to Supabase
       const { success, error } = await submitQuizData(quizSubmission);
       
+      // Envoyer l'email via notre fonction Edge Supabase
+      const sendEmailResponse = await fetch("https://dzbjugabndesaikxgtpi.supabase.co/functions/v1/send-confirmation-email", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          email: quizData.email,
+          firstName: "", // Nous n'avons pas collecté le prénom, donc on laisse vide
+          utmSource: utmSource || trafficSource || '',
+          utmMedium: utmMedium || trafficType || '',
+          utmCampaign: utmCampaign || campaign || '',
+          utmContent: utmContent || creative || ''
+        })
+      });
+      
+      // Vérifier si l'envoi de l'email a réussi
+      const emailResult = await sendEmailResponse.json();
+      
+      if (sendEmailResponse.ok) {
+        toast.success("Check your email!", {
+          description: "Your full metabolic report has been sent",
+          icon: <Check className="h-4 w-4" />
+        });
+        console.log("Email sent successfully:", emailResult);
+      } else {
+        console.error("Error sending email:", emailResult);
+      }
+      
       if (success) {
         toast.success("Data submitted successfully!", {
           description: "Redirecting you to your personalized solution...",
@@ -108,19 +157,30 @@ const ResultsPage = () => {
         });
       }
       
-      // Build the redirect URL with mapped parameters
-      let redirectUrl = "https://mitolyn.com/science/?shield=34006jve54p94p7hmhxf2g7wbe";
+      // Get redirect URL from the email service response or build default one
+      let redirectUrl;
       
-      // Map Facebook parameters to ClickBank parameters
-      if (utmSource) redirectUrl += `&tid=${encodeURIComponent(utmSource)}`;
-      if (trafficType) redirectUrl += `&utm_medium=${encodeURIComponent(trafficType)}`;
-      if (trafficSource) redirectUrl += `&utm_source=${encodeURIComponent(trafficSource)}`;
-      if (campaign) redirectUrl += `&cbname=${encodeURIComponent(campaign)}`;
-      if (adgroup) redirectUrl += `&cbfid=${encodeURIComponent(adgroup)}`;
-      if (ad) redirectUrl += `&cbaff=${encodeURIComponent(ad)}`;
-      if (creative) redirectUrl += `&creative=${encodeURIComponent(creative)}`;
-      
-      // L'email a été supprimé des paramètres de redirection comme demandé
+      if (emailResult && emailResult.redirectUrl) {
+        redirectUrl = emailResult.redirectUrl;
+      } else {
+        // Original redirect URL construction using conversion des paramètres UTM → ClickBank
+        redirectUrl = "https://mitolyn.com/science/?shield=34006jve54p94p7hmhxf2g7wbe";
+        
+        // Map Facebook parameters to ClickBank parameters
+        if (utmSource) redirectUrl += `&tid=${encodeURIComponent(utmSource)}`;
+        if (trafficType) redirectUrl += `&utm_medium=${encodeURIComponent(trafficType)}`;
+        
+        // Si la source est un email, on set traffic_source=email
+        const sourceValue = utmSource === 'email' || !utmSource ? 'email' : utmSource;
+        redirectUrl += `&traffic_source=${encodeURIComponent(sourceValue)}`;
+        
+        if (campaign) redirectUrl += `&cbname=${encodeURIComponent(campaign)}`;
+        if (adgroup) redirectUrl += `&cbfid=${encodeURIComponent(adgroup)}`;
+        if (ad) redirectUrl += `&cbaff=${encodeURIComponent(ad)}`;
+        if (creative) redirectUrl += `&creative=${encodeURIComponent(creative)}`;
+        
+        // L'email a été supprimé des paramètres de redirection comme demandé
+      }
       
       console.log("Redirecting to:", redirectUrl);
       
@@ -132,6 +192,7 @@ const ResultsPage = () => {
     } catch (err) {
       console.error("Error in submission process:", err);
       setSubmitting(false);
+      setShowLoader(false);
       toast.error("Something went wrong", {
         description: "Please try again later",
         icon: <AlertCircle className="h-4 w-4" />
@@ -151,90 +212,102 @@ const ResultsPage = () => {
         <p className="text-lg text-gray-600">
           We've identified your unique metabolic profile
         </p>
-      </div>
-      
-      <div className="space-y-6 mb-8">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="result-metric p-5">
-            <h3 className="text-lg font-semibold">
-              <span className="mr-2">⏳</span>
-              Current Metabolic Age
-            </h3>
-            <div className="text-3xl font-bold text-red-600 mt-2">
-              {metabolicAge} years
-            </div>
-            <div className="text-sm text-gray-600 mt-1">
-              {metabolicAge - 10}+ years above ideal
-            </div>
-          </div>
-          
-          <div className="result-metric p-5">
-            <h3 className="text-lg font-semibold">
-              <span className="mr-2">🗓️</span>
-              Projected Goal Timeline
-            </h3>
-            <div className="text-3xl font-bold text-red-600 mt-2">
-              {projectedMonths} months
-            </div>
-            <div className="text-sm text-gray-600 mt-1">
-              with diet & exercise alone
-            </div>
-          </div>
-        </div>
         
-        <div className="space-y-4">
-          <h3 className="text-xl font-semibold text-brand-darkBlue">
-            <span className="mr-2">📊</span>
-            Key Metabolic Indicators:
-          </h3>
-          
-          <div className="result-metric bad p-4">
-            <h4 className="font-semibold">
-              <span className="mr-2">🔥</span>
-              Fat-Burning Speed
-            </h4>
-            <div className="text-lg font-bold text-red-600 mt-1">
-              43% slower than optimal
+        {showLoader && (
+          <div className="my-6 flex justify-center">
+            <div className="w-40 h-40">
+              <Lottie options={defaultOptions} />
+            </div>
+          </div>
+        )}
+      </div>
+      
+      {!showLoader && (
+        <div className="space-y-6 mb-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="result-metric p-5">
+              <h3 className="text-lg font-semibold">
+                <span className="mr-2">⏳</span>
+                Current Metabolic Age
+              </h3>
+              <div className="text-3xl font-bold text-red-600 mt-2">
+                {metabolicAge} years
+              </div>
+              <div className="text-sm text-gray-600 mt-1">
+                {metabolicAge - 10}+ years above ideal
+              </div>
+            </div>
+            
+            <div className="result-metric p-5">
+              <h3 className="text-lg font-semibold">
+                <span className="mr-2">🗓️</span>
+                Projected Goal Timeline
+              </h3>
+              <div className="text-3xl font-bold text-red-600 mt-2">
+                {projectedMonths} months
+              </div>
+              <div className="text-sm text-gray-600 mt-1">
+                with diet & exercise alone
+              </div>
             </div>
           </div>
           
-          <div className="result-metric bad p-4">
-            <h4 className="font-semibold">
-              <span className="mr-2">⚡</span>
-              Cellular Energy Production
-            </h4>
-            <div className="text-lg font-bold text-red-600 mt-1">
-              2.1x below healthy levels
+          <div className="space-y-4">
+            <h3 className="text-xl font-semibold text-brand-darkBlue">
+              <span className="mr-2">📊</span>
+              Key Metabolic Indicators:
+            </h3>
+            
+            <div className="result-metric bad p-4">
+              <h4 className="font-semibold">
+                <span className="mr-2">🔥</span>
+                Fat-Burning Speed
+              </h4>
+              <div className="text-lg font-bold text-red-600 mt-1">
+                43% slower than optimal
+              </div>
             </div>
-          </div>
-          
-          <div className="result-metric bad p-4">
-            <h4 className="font-semibold">
-              <span className="mr-2">⚠️</span>
-              Visceral Fat Risk
-            </h4>
-            <div className="text-lg font-bold text-red-600 mt-1">
-              High
+            
+            <div className="result-metric bad p-4">
+              <h4 className="font-semibold">
+                <span className="mr-2">⚡</span>
+                Cellular Energy Production
+              </h4>
+              <div className="text-lg font-bold text-red-600 mt-1">
+                2.1x below healthy levels
+              </div>
+            </div>
+            
+            <div className="result-metric bad p-4">
+              <h4 className="font-semibold">
+                <span className="mr-2">⚠️</span>
+                Visceral Fat Risk
+              </h4>
+              <div className="text-lg font-bold text-red-600 mt-1">
+                High
+              </div>
             </div>
           </div>
         </div>
-      </div>
+      )}
       
-      <div className="bg-brand-lightBlue p-6 rounded-lg mb-8">
-        <h3 className="text-xl font-semibold mb-3">
-          <span className="mr-2">💡</span>
-          What This Means:
-        </h3>
-        <p className="text-gray-800 mb-4">
-          Your quiz results indicate a rare mitochondrial deficiency—the root cause of stubborn fat. 
-          <span className="font-semibold"> But there's hope...</span>
-        </p>
-        <p className={`${isUrgent ? 'text-red-600' : 'text-brand-blue'} font-bold`}>
-          {isUrgent 
-            ? "⏰ TIME-SENSITIVE: Your profile matches those who have seen dramatic improvements with our specialized approach."
-            : "✨ Your profile matches those who have seen excellent results with our specialized approach."}
-        </p>
-      </div>
+      {!showLoader && (
+        <div className="bg-brand-lightBlue p-6 rounded-lg mb-8">
+          <h3 className="text-xl font-semibold mb-3">
+            <span className="mr-2">💡</span>
+            What This Means:
+          </h3>
+          <p className="text-gray-800 mb-4">
+            Your quiz results indicate a rare mitochondrial deficiency—the root cause of stubborn fat. 
+            <span className="font-semibold"> But there's hope...</span>
+          </p>
+          <p className={`${isUrgent ? 'text-red-600' : 'text-brand-blue'} font-bold`}>
+            {isUrgent 
+              ? "⏰ TIME-SENSITIVE: Your profile matches those who have seen dramatic improvements with our specialized approach."
+              : "✨ Your profile matches those who have seen excellent results with our specialized approach."}
+          </p>
+        </div>
+      )}
       
       <div className="bg-gradient-to-r from-brand-teal to-brand-blue text-white p-6 rounded-lg">
         <h3 className="text-xl font-semibold mb-3">
@@ -259,9 +332,14 @@ const ResultsPage = () => {
           <Button 
             onClick={handleSubmit}
             disabled={!emailValid || submitting}
-            className="w-full bg-yellow-400 hover:bg-yellow-500 text-black font-bold text-base sm:text-lg py-6 px-4 max-w-full whitespace-normal h-auto"
+            className="w-full bg-yellow-400 hover:bg-yellow-500 text-black font-bold text-base sm:text-lg py-6 px-4 max-w-full whitespace-normal h-auto flex items-center justify-center space-x-2"
           >
-            {submitting ? "Processing..." : "SEND MY REPORT & WATCH VIDEO"}
+            {submitting ? (
+              <>
+                <Loader2 className="h-5 w-5 animate-spin" />
+                <span>Processing...</span>
+              </>
+            ) : "SEND MY REPORT & WATCH VIDEO"}
           </Button>
           
           <div className="text-xs text-center opacity-75">
