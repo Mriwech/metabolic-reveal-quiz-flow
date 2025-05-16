@@ -1,12 +1,25 @@
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useQuiz } from '@/context/QuizContext';
 import { Progress } from '@/components/ui/progress';
+import Lottie from 'react-lottie';
+import * as animationData from '@/assets/analysis.json';
 
 const AnalyzingPage = () => {
   const { setCurrentQuestion } = useQuiz();
   const [progress, setProgress] = useState(0);
   const [message, setMessage] = useState("Crunching 127 metabolic data points...");
+  const lottieRef = useRef<any>(null);
+  
+  // Configuration pour l'animation Lottie avec une copie sécurisée des données
+  const defaultOptions = {
+    loop: true,
+    autoplay: true,
+    animationData: JSON.parse(JSON.stringify(animationData)),
+    rendererSettings: {
+      preserveAspectRatio: 'xMidYMid slice'
+    }
+  };
   
   useEffect(() => {
     // Simulate analyzing data with a sequence of messages
@@ -49,6 +62,9 @@ const AnalyzingPage = () => {
       clearTimeout(timer);
       clearInterval(progressInterval);
       clearInterval(messageInterval);
+      if (lottieRef.current && lottieRef.current.anim) {
+        lottieRef.current.anim.destroy();
+      }
     };
   }, [setCurrentQuestion]);
 
@@ -60,17 +76,16 @@ const AnalyzingPage = () => {
       
       {/* Metabolic Scanner Visualization */}
       <div className="relative h-80 w-full bg-brand-lightBlue rounded-lg mb-8 overflow-hidden">
-        {/* Body Outline */}
         <div className="absolute inset-0 flex items-center justify-center">
-          <div className="w-1/2 h-3/4 bg-white rounded-full mx-auto opacity-70"></div>
+          {/* Animation Lottie */}
+          <Lottie 
+            options={defaultOptions}
+            height={200}
+            width={200}
+            isClickToPauseDisabled={true}
+            ref={lottieRef}
+          />
         </div>
-        
-        {/* Problem Areas */}
-        <div className="absolute top-1/3 left-1/2 transform -translate-x-1/2 w-16 h-16 rounded-full bg-red-400 animate-pulse-red opacity-60"></div>
-        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 w-24 h-12 rounded-full bg-red-400 animate-pulse-red opacity-60"></div>
-        
-        {/* Scanner Line */}
-        <div className="scanner-line animate-scanning"></div>
         
         {/* Simulated Biomarkers */}
         <div className="absolute bottom-4 left-4 right-4 text-left text-sm">

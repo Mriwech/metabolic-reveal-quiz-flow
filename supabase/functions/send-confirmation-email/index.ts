@@ -7,7 +7,6 @@ interface EmailRequestBody {
   email: string;
   firstName?: string;
   utmSource?: string;
-  utmMedium?: string;
   utmCampaign?: string;
   utmContent?: string;
 }
@@ -25,7 +24,7 @@ serve(async (req) => {
   }
 
   try {
-    const { email, firstName, utmSource, utmMedium, utmCampaign, utmContent } = await req.json() as EmailRequestBody;
+    const { email, firstName, utmSource, utmCampaign, utmContent } = await req.json() as EmailRequestBody;
 
     if (!email) {
       return new Response(
@@ -56,31 +55,25 @@ serve(async (req) => {
     }
 
     // Conversion des paramètres UTM vers ClickBank
+    // Pour email, on force traffic_source=email
     const clickBankParams = {
-      tid: utmCampaign || '',                // Transaction ID
-      traffic_source: utmSource || 'email',  // Source du trafic (fb/email), par défaut email
-      creative: utmContent || ''             // Version créative
+      tid: utmCampaign || '',                 // Transaction ID
+      traffic_source: 'email',                // Source du trafic venant de l'email est toujours "email"
+      creative: utmContent || ''              // Version créative
     };
 
-    console.log("Converting UTM to ClickBank:", { 
-      from: { utmSource, utmMedium, utmCampaign, utmContent },
+    console.log("Converting UTM to ClickBank for email link:", { 
+      from: { utmSource, utmCampaign, utmContent },
       to: clickBankParams 
     });
 
     // Construire l'URL de redirection avec les paramètres convertis
     const baseUrl = "https://mitolyn.com/science/?shield=34006jve54p94p7hmhxf2g7wbe";
-    const redirectUrl = `${baseUrl}${clickBankParams.tid ? `&tid=${encodeURIComponent(clickBankParams.tid)}` : ''}${clickBankParams.traffic_source ? `&traffic_source=${encodeURIComponent(clickBankParams.traffic_source)}` : ''}${clickBankParams.creative ? `&creative=${encodeURIComponent(clickBankParams.creative)}` : ''}`;
+    const redirectUrl = `${baseUrl}${clickBankParams.tid ? `&tid=${encodeURIComponent(clickBankParams.tid)}` : ''}${`&traffic_source=${encodeURIComponent(clickBankParams.traffic_source)}`}${clickBankParams.creative ? `&creative=${encodeURIComponent(clickBankParams.creative)}` : ''}`;
 
     // Préparation du contenu HTML pour l'email
     const ctaButtonStyle = "background-color:#ffd32a;border-radius:6px;color:#000;display:inline-block;font-family:sans-serif;font-size:16px;font-weight:bold;line-height:50px;text-align:center;text-decoration:none;width:230px;-webkit-text-size-adjust:none;";
     
-    // Animation Lottie intégrée comme lien vers une iframe
-    const lottieAnimation = `
-      <div style="text-align:center; margin:20px 0;">
-        <iframe src="https://lottie.host/embed/d0b701fc-2581-4eef-9773-04c537442a90/g1WP4S5loB.json" width="300" height="300" style="border:none;"></iframe>
-      </div>
-    `;
-
     // Contenu de l'email
     const emailContent = `
       <html>
@@ -151,8 +144,6 @@ serve(async (req) => {
             <div class="content">
               <p>Hello${firstName ? ` ${firstName}` : ''},</p>
               <p>Thank you for completing your metabolic assessment. Your results show that you may have a rare mitochondrial deficiency—the root cause of stubborn fat. But there's hope...</p>
-
-              ${lottieAnimation}
               
               <div class="result-metric">
                 <h3>⏳ Current Metabolic Age</h3>

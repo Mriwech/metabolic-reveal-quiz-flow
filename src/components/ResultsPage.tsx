@@ -51,19 +51,11 @@ const ResultsPage = () => {
         }
       }
       
-      // Get UTM parameters
+      // Get UTM parameters - uniquement ceux demandés
       const urlParams = new URLSearchParams(window.location.search);
       const utmSource = urlParams.get('utm_source');
-      const utmMedium = urlParams.get('utm_medium');
       const utmCampaign = urlParams.get('utm_campaign');
-      const utmTerm = urlParams.get('utm_term');
       const utmContent = urlParams.get('utm_content');
-      const trafficType = urlParams.get('traffic_type');
-      const trafficSource = urlParams.get('traffic_source');
-      const campaign = urlParams.get('campaign');
-      const adgroup = urlParams.get('adgroup');
-      const ad = urlParams.get('ad');
-      const creative = urlParams.get('creative');
       
       // Create session ID if not exists
       const sessionId = localStorage.getItem('quiz_session_id') || `session_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
@@ -72,11 +64,9 @@ const ResultsPage = () => {
       // Ensure all required fields are present and correctly typed
       const quizSubmission = {
         session_id: sessionId,
-        utm_source: utmSource || trafficSource || '',
-        utm_medium: utmMedium || trafficType || '',
-        utm_campaign: utmCampaign || campaign || '',
-        utm_term: utmTerm || '',
-        utm_content: utmContent || creative || '',
+        utm_source: utmSource || '',
+        utm_campaign: utmCampaign || '',
+        utm_content: utmContent || '',
         gender: quizData.gender || 'not_specified',
         age_group: quizData.ageGroup || 'not_specified',
         current_weight: Number(quizData.currentWeight) || 0,
@@ -113,10 +103,9 @@ const ResultsPage = () => {
         body: JSON.stringify({
           email: quizData.email,
           firstName: "", // We haven't collected first name, so leave empty
-          utmSource: utmSource || trafficSource || '',
-          utmMedium: utmMedium || trafficType || '',
-          utmCampaign: utmCampaign || campaign || '',
-          utmContent: utmContent || creative || ''
+          utmSource: utmSource || '',
+          utmCampaign: utmCampaign || '',
+          utmContent: utmContent || ''
         })
       });
       
@@ -157,16 +146,8 @@ const ResultsPage = () => {
         // Build the redirect URL using our utility function
         redirectUrl = buildRedirectUrl(
           utmSource,
-          utmMedium,
           utmCampaign,
-          utmTerm,
-          utmContent,
-          trafficType,
-          trafficSource,
-          campaign,
-          adgroup,
-          ad,
-          creative
+          utmContent
         );
       }
       

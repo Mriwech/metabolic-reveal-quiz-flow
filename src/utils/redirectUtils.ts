@@ -1,31 +1,26 @@
 
 export const buildRedirectUrl = (
   utmSource?: string | null,
-  utmMedium?: string | null,
   utmCampaign?: string | null,
-  utmTerm?: string | null,
-  utmContent?: string | null,
-  trafficType?: string | null,
-  trafficSource?: string | null,
-  campaign?: string | null,
-  adgroup?: string | null,
-  ad?: string | null,
-  creative?: string | null
+  utmContent?: string | null
 ): string => {
   let redirectUrl = "https://mitolyn.com/science/?shield=34006jve54p94p7hmhxf2g7wbe";
   
-  // Map Facebook parameters to ClickBank parameters
-  if (utmSource) redirectUrl += `&tid=${encodeURIComponent(utmSource)}`;
-  if (trafficType) redirectUrl += `&utm_medium=${encodeURIComponent(trafficType)}`;
+  // Conversion des paramètres UTM vers ClickBank
+  // Si utm_source existe, l'utiliser comme traffic_source, sinon utiliser "direct"
+  const trafficSource = utmSource || "direct";
   
-  // If the source is an email, set traffic_source=email
-  const sourceValue = utmSource === 'email' || !utmSource ? 'email' : utmSource;
-  redirectUrl += `&traffic_source=${encodeURIComponent(sourceValue)}`;
+  redirectUrl += `&traffic_source=${encodeURIComponent(trafficSource)}`;
   
-  if (campaign) redirectUrl += `&cbname=${encodeURIComponent(campaign)}`;
-  if (adgroup) redirectUrl += `&cbfid=${encodeURIComponent(adgroup)}`;
-  if (ad) redirectUrl += `&cbaff=${encodeURIComponent(ad)}`;
-  if (creative) redirectUrl += `&creative=${encodeURIComponent(creative)}`;
+  // Ajouter tid si utmCampaign existe
+  if (utmCampaign) {
+    redirectUrl += `&tid=${encodeURIComponent(utmCampaign)}`;
+  }
+  
+  // Ajouter creative si utmContent existe
+  if (utmContent) {
+    redirectUrl += `&creative=${encodeURIComponent(utmContent)}`;
+  }
   
   return redirectUrl;
 };

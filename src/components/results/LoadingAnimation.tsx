@@ -4,9 +4,9 @@ import Lottie from 'react-lottie';
 import * as animationData from '@/assets/analysis.json';
 
 const LoadingAnimation: React.FC = () => {
-  const lottieRef = useRef(null);
+  const lottieRef = useRef<any>(null);
   
-  // Configuration for the Lottie animation with a safe copy of the data
+  // Configuration pour l'animation Lottie avec une copie sécurisée des données
   const defaultOptions = {
     loop: true,
     autoplay: true,
@@ -16,11 +16,11 @@ const LoadingAnimation: React.FC = () => {
     }
   };
   
-  // Clean up animation when component unmounts
+  // Nettoyer l'animation lorsque le composant est démonté
   useEffect(() => {
     return () => {
-      if (lottieRef.current) {
-        lottieRef.current = null;
+      if (lottieRef.current && lottieRef.current.anim) {
+        lottieRef.current.anim.destroy();
       }
     };
   }, []);
