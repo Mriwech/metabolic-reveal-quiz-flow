@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, ReactNode } from 'react';
 
 // Define types for our quiz state
@@ -13,7 +14,6 @@ type QuizData = {
   biggestFrustration: string;
   readinessToChange: string;
   email: string;
-  metabolicAge?: number; // Added metabolicAge property
 };
 
 type QuizContextType = {
@@ -39,7 +39,6 @@ const initialQuizData: QuizData = {
   biggestFrustration: '',
   readinessToChange: '',
   email: '',
-  metabolicAge: 0, // Initialize with default value
 };
 
 const QuizContext = createContext<QuizContextType | undefined>(undefined);
