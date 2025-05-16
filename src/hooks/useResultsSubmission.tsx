@@ -1,4 +1,5 @@
 
+import React from 'react';
 import { useState } from 'react';
 import { useQuiz } from '@/context/QuizContext';
 import { submitQuizData } from '@/lib/supabase';
