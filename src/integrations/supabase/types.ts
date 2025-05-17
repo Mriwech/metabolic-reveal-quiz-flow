@@ -9,6 +9,27 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      admin_users: {
+        Row: {
+          created_at: string | null
+          id: string
+          password_hash: string
+          username: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          password_hash: string
+          username: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          password_hash?: string
+          username?: string
+        }
+        Relationships: []
+      }
       quiz_submissions: {
         Row: {
           age_group: string | null
@@ -75,6 +96,51 @@ export type Database = {
           utm_medium?: string | null
           utm_source?: string | null
           utm_term?: string | null
+        }
+        Relationships: []
+      }
+      user_sessions: {
+        Row: {
+          created_at: string | null
+          end_time: string | null
+          id: string
+          ip_address: string | null
+          referrer: string | null
+          session_id: string
+          start_time: string
+          submitted_email: boolean | null
+          user_agent: string | null
+          utm_campaign: string | null
+          utm_content: string | null
+          utm_source: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          end_time?: string | null
+          id?: string
+          ip_address?: string | null
+          referrer?: string | null
+          session_id: string
+          start_time?: string
+          submitted_email?: boolean | null
+          user_agent?: string | null
+          utm_campaign?: string | null
+          utm_content?: string | null
+          utm_source?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          end_time?: string | null
+          id?: string
+          ip_address?: string | null
+          referrer?: string | null
+          session_id?: string
+          start_time?: string
+          submitted_email?: boolean | null
+          user_agent?: string | null
+          utm_campaign?: string | null
+          utm_content?: string | null
+          utm_source?: string | null
         }
         Relationships: []
       }

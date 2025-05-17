@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useQuiz } from '@/context/QuizContext';
 import { toast } from 'sonner';
 import { submitQuizData } from '@/lib/supabase';
@@ -10,6 +10,7 @@ import MetabolicMetrics from './results/MetabolicMetrics';
 import ResultsSummary from './results/ResultsSummary';
 import EmailForm from './results/EmailForm';
 import { buildRedirectUrl } from '@/utils/redirectUtils';
+import { trackSession, updateSessionSubmission } from '@/lib/analytics';
 
 const ResultsPage = () => {
   const { quizData, updateQuizData, calculateMetabolicAge, calculateProjectedMonths, isHighMotivation, isUrgent } = useQuiz();
@@ -19,6 +20,11 @@ const ResultsPage = () => {
   
   const metabolicAge = calculateMetabolicAge();
   const projectedMonths = calculateProjectedMonths();
+  
+  useEffect(() => {
+    // Track user session when the results page is loaded
+    trackSession();
+  }, []);
   
   const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const email = e.target.value;
@@ -60,6 +66,9 @@ const ResultsPage = () => {
       // Create session ID if not exists
       const sessionId = localStorage.getItem('quiz_session_id') || `session_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
       localStorage.setItem('quiz_session_id', sessionId);
+      
+      // Update session to mark email submission
+      updateSessionSubmission(sessionId);
       
       // Ensure all required fields are present and correctly typed
       const quizSubmission = {
