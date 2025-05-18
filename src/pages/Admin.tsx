@@ -7,9 +7,10 @@ import { Label } from '@/components/ui/label';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
 import { toast } from 'sonner';
 import { verifyAdminLogin, isAdminAuthenticated, setAdminAuthenticated } from '@/lib/adminAuth';
+import { supabase } from '@/integrations/supabase/client';
 
 const Admin = () => {
-  const [username, setUsername] = useState('');
+  const [username, setUsername] = useState('admin'); // Pre-fill with admin
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
@@ -19,6 +20,34 @@ const Admin = () => {
     if (isAdminAuthenticated()) {
       navigate('/admin/dashboard');
     }
+    
+    // Check if admin user exists, if not create it
+    const checkAdminUser = async () => {
+      const { data, error } = await supabase
+        .from('admin_users')
+        .select('id')
+        .eq('username', 'admin');
+        
+      if (error) {
+        console.error('Error checking admin user:', error);
+        return;
+      }
+      
+      if (!data || data.length === 0) {
+        // Create admin user if it doesn't exist
+        const { error: insertError } = await supabase
+          .from('admin_users')
+          .insert({ username: 'admin', password_hash: '' });
+          
+        if (insertError) {
+          console.error('Error creating admin user:', insertError);
+        } else {
+          console.log('Admin user created successfully');
+        }
+      }
+    };
+    
+    checkAdminUser();
   }, [navigate]);
   
   const handleLogin = async (e: React.FormEvent) => {
@@ -26,6 +55,7 @@ const Admin = () => {
     setLoading(true);
     
     try {
+      console.log('Attempting login with username:', username);
       const isValid = await verifyAdminLogin(username, password);
       
       if (isValid) {
