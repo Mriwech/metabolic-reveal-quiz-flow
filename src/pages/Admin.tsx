@@ -23,27 +23,34 @@ const Admin = () => {
     
     // Check if admin user exists, if not create it
     const checkAdminUser = async () => {
-      const { data, error } = await supabase
-        .from('admin_users')
-        .select('id')
-        .eq('username', 'admin');
-        
-      if (error) {
-        console.error('Error checking admin user:', error);
-        return;
-      }
-      
-      if (!data || data.length === 0) {
-        // Create admin user if it doesn't exist
-        const { error: insertError } = await supabase
+      try {
+        const { data, error } = await supabase
           .from('admin_users')
-          .insert({ username: 'admin', password_hash: '' });
+          .select('id')
+          .eq('username', 'admin');
           
-        if (insertError) {
-          console.error('Error creating admin user:', insertError);
-        } else {
-          console.log('Admin user created successfully');
+        if (error) {
+          console.error('Error checking admin user:', error);
+          return;
         }
+        
+        if (!data || data.length === 0) {
+          console.log('Admin user not found, creating...');
+          // Create admin user if it doesn't exist
+          const { error: insertError } = await supabase
+            .from('admin_users')
+            .insert({ username: 'admin', password_hash: '' });
+            
+          if (insertError) {
+            console.error('Error creating admin user:', insertError);
+          } else {
+            console.log('Admin user created successfully');
+          }
+        } else {
+          console.log('Admin user already exists');
+        }
+      } catch (err) {
+        console.error('Exception in checkAdminUser:', err);
       }
     };
     
