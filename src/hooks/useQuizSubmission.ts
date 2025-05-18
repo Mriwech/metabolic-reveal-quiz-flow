@@ -70,7 +70,7 @@ export const useQuizSubmission = (quizData: any) => {
       // Submit to Supabase
       const { success, error } = await submitQuizData(quizSubmission);
       
-      // Send confirmation email
+      // Send confirmation email using SendGrid template
       const sendEmailResponse = await fetch("https://dzbjugabndesaikxgtpi.supabase.co/functions/v1/send-confirmation-email", {
         method: "POST",
         headers: {
