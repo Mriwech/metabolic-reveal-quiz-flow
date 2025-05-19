@@ -1,5 +1,6 @@
 
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
+import { updateQuizProgress } from '@/lib/analytics';
 
 // Define types for our quiz state
 type QuizData = {
@@ -52,6 +53,16 @@ export const QuizProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const isUrgent = 
     (quizData.ageGroup === '45-60' || quizData.ageGroup === '60+') && 
     quizData.failedDiets === '4+';
+
+  // Track question changes and update analytics
+  useEffect(() => {
+    // Get session ID
+    const sessionId = localStorage.getItem('quiz_session_id');
+    if (sessionId) {
+      // Track current question and data
+      updateQuizProgress(sessionId, currentQuestion, quizData);
+    }
+  }, [currentQuestion, quizData]);
 
   // Calculate "metabolic age" for display in results (current age + 10-15 years)
   const calculateMetabolicAge = () => {

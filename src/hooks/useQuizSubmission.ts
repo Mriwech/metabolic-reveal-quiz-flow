@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { submitQuizData } from '@/lib/supabase';
-import { updateSessionSubmission } from '@/lib/analytics';
+import { updateSessionSubmission, getUserSessionIdBySessionId, markQuizCompleted } from '@/lib/analytics';
 import { buildRedirectUrl } from '@/utils/redirectUtils';
 
 export const useQuizSubmission = (quizData: any) => {
@@ -36,12 +36,19 @@ export const useQuizSubmission = (quizData: any) => {
       const sessionId = localStorage.getItem('quiz_session_id') || `session_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
       localStorage.setItem('quiz_session_id', sessionId);
       
+      // Get the user_session_id from the database using sessionId
+      const userSessionId = await getUserSessionIdBySessionId(sessionId);
+      
       // Update session to mark email submission
       updateSessionSubmission(sessionId);
+      
+      // Mark quiz as completed
+      markQuizCompleted(sessionId);
       
       // Prepare submission data
       const quizSubmission = {
         session_id: sessionId,
+        user_session_id: userSessionId,
         utm_source: utmSource || '',
         utm_campaign: utmCampaign || '',
         utm_content: utmContent || '',
@@ -81,7 +88,12 @@ export const useQuizSubmission = (quizData: any) => {
           firstName: "",
           utmSource: utmSource || '',
           utmCampaign: utmCampaign || '',
-          utmContent: utmContent || ''
+          utmContent: utmContent || '',
+          current_date: new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }),
+          redirect_url: buildRedirectUrl(utmSource || "direct", utmCampaign, utmContent),
+          unsubscribe_url: `https://mitolyn.com/unsubscribe?email=${encodeURIComponent(quizData.email)}`,
+          privacy_url: "https://mitolyn.com/privacy",
+          year: new Date().getFullYear().toString()
         })
       });
       

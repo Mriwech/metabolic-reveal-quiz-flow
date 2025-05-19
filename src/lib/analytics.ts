@@ -2,6 +2,50 @@
 import { supabase } from '@/integrations/supabase/client';
 
 /**
+ * Detect device type based on user agent
+ */
+const detectDeviceType = (userAgent: string): string => {
+  if (/tablet|ipad|playbook|silk/i.test(userAgent)) {
+    return 'tablet';
+  }
+  if (/mobile|android|iphone|ipod|phone/i.test(userAgent)) {
+    return 'mobile';
+  }
+  return 'desktop';
+};
+
+/**
+ * Detect browser based on user agent
+ */
+const detectBrowser = (userAgent: string): string => {
+  if (/edge/i.test(userAgent)) return 'Edge';
+  if (/chrome/i.test(userAgent)) return 'Chrome';
+  if (/firefox/i.test(userAgent)) return 'Firefox';
+  if (/safari/i.test(userAgent)) return 'Safari';
+  if (/msie|trident/i.test(userAgent)) return 'Internet Explorer';
+  return 'Unknown';
+};
+
+/**
+ * Detect operating system based on user agent
+ */
+const detectOS = (userAgent: string): string => {
+  if (/windows/i.test(userAgent)) return 'Windows';
+  if (/mac/i.test(userAgent)) return 'MacOS';
+  if (/linux/i.test(userAgent)) return 'Linux';
+  if (/android/i.test(userAgent)) return 'Android';
+  if (/ios|iphone|ipad/i.test(userAgent)) return 'iOS';
+  return 'Unknown';
+};
+
+/**
+ * Get screen size
+ */
+const getScreenSize = (): string => {
+  return `${window.screen.width}x${window.screen.height}`;
+};
+
+/**
  * Track a new user session when they start using the app
  */
 export const trackSession = async () => {
@@ -13,11 +57,12 @@ export const trackSession = async () => {
       localStorage.setItem('quiz_session_id', sessionId);
     }
     
-    // Get UTM parameters from the URL
-    const urlParams = new URLSearchParams(window.location.search);
-    const utmSource = urlParams.get('utm_source');
-    const utmCampaign = urlParams.get('utm_campaign');
-    const utmContent = urlParams.get('utm_content');
+    // Get device information
+    const userAgent = navigator.userAgent;
+    const deviceType = detectDeviceType(userAgent);
+    const browser = detectBrowser(userAgent);
+    const operatingSystem = detectOS(userAgent);
+    const screenSize = getScreenSize();
     
     // Insert session data into Supabase
     const { error } = await supabase
@@ -26,11 +71,12 @@ export const trackSession = async () => {
         session_id: sessionId,
         start_time: new Date().toISOString(),
         ip_address: '', // We can't reliably get this from the client side
-        user_agent: navigator.userAgent,
+        user_agent: userAgent,
         referrer: document.referrer,
-        utm_source: utmSource || null,
-        utm_campaign: utmCampaign || null,
-        utm_content: utmContent || null
+        device_type: deviceType,
+        browser: browser,
+        operating_system: operatingSystem,
+        screen_size: screenSize
       }]);
     
     if (error) {
@@ -56,9 +102,22 @@ export const trackSession = async () => {
  */
 export const updateSessionEndTime = async (sessionId: string) => {
   try {
+    // Calculate session duration
+    const sessionStartStr = localStorage.getItem('session_start_time');
+    let sessionDuration = null;
+    
+    if (sessionStartStr) {
+      const sessionStart = new Date(sessionStartStr).getTime();
+      const sessionEnd = new Date().getTime();
+      sessionDuration = Math.floor((sessionEnd - sessionStart) / 1000); // Duration in seconds
+    }
+    
     const { error } = await supabase
       .from('user_sessions')
-      .update({ end_time: new Date().toISOString() })
+      .update({ 
+        end_time: new Date().toISOString(),
+        session_duration: sessionDuration
+      })
       .eq('session_id', sessionId);
     
     if (error) {
@@ -86,5 +145,86 @@ export const updateSessionSubmission = async (sessionId: string) => {
     }
   } catch (err) {
     console.error('Error in updateSessionSubmission:', err);
+  }
+};
+
+/**
+ * Update quiz progress in session
+ */
+export const updateQuizProgress = async (sessionId: string, questionNumber: number, quizData: any) => {
+  try {
+    // Store last seen question
+    const { error } = await supabase
+      .from('user_sessions')
+      .update({ 
+        last_question_viewed: questionNumber,
+        quiz_progress: quizData
+      })
+      .eq('session_id', sessionId);
+    
+    if (error) {
+      console.error('Error updating quiz progress:', error);
+    }
+  } catch (err) {
+    console.error('Error in updateQuizProgress:', err);
+  }
+};
+
+/**
+ * Mark quiz as completed
+ */
+export const markQuizCompleted = async (sessionId: string) => {
+  try {
+    const { error } = await supabase
+      .from('user_sessions')
+      .update({ completed_quiz: true })
+      .eq('session_id', sessionId);
+    
+    if (error) {
+      console.error('Error marking quiz as completed:', error);
+    }
+  } catch (err) {
+    console.error('Error in markQuizCompleted:', err);
+  }
+};
+
+/**
+ * Track VSL button click
+ */
+export const trackVSLButtonClick = async (sessionId: string) => {
+  try {
+    const { error } = await supabase
+      .from('user_sessions')
+      .update({ clicked_vsl_button: true })
+      .eq('session_id', sessionId);
+    
+    if (error) {
+      console.error('Error tracking VSL button click:', error);
+    }
+  } catch (err) {
+    console.error('Error in trackVSLButtonClick:', err);
+  }
+};
+
+/**
+ * Get user session ID by session ID
+ */
+export const getUserSessionIdBySessionId = async (sessionId: string): Promise<string | null> => {
+  try {
+    const { data, error } = await supabase
+      .from('user_sessions')
+      .select('id')
+      .eq('session_id', sessionId)
+      .single();
+    
+    if (error) {
+      console.error('Error getting user session ID:', error);
+      return null;
+    }
+    
+    return data?.id || null;
+  } catch (err) {
+    console.error('Error in getUserSessionIdBySessionId:', err);
+    return null;
   }
 };

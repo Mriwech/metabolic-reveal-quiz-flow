@@ -47,6 +47,7 @@ export type Database = {
           session_id: string
           target_weight: number | null
           updated_at: string | null
+          user_session_id: string | null
           utm_campaign: string | null
           utm_content: string | null
           utm_medium: string | null
@@ -69,6 +70,7 @@ export type Database = {
           session_id: string
           target_weight?: number | null
           updated_at?: string | null
+          user_session_id?: string | null
           utm_campaign?: string | null
           utm_content?: string | null
           utm_medium?: string | null
@@ -91,56 +93,83 @@ export type Database = {
           session_id?: string
           target_weight?: number | null
           updated_at?: string | null
+          user_session_id?: string | null
           utm_campaign?: string | null
           utm_content?: string | null
           utm_medium?: string | null
           utm_source?: string | null
           utm_term?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "quiz_submissions_user_session_id_fkey"
+            columns: ["user_session_id"]
+            isOneToOne: false
+            referencedRelation: "user_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_sessions: {
         Row: {
+          browser: string | null
+          clicked_vsl_button: boolean | null
+          completed_quiz: boolean | null
           created_at: string | null
+          device_type: string | null
           end_time: string | null
           id: string
           ip_address: string | null
+          last_question_viewed: number | null
+          operating_system: string | null
+          quiz_progress: Json | null
           referrer: string | null
+          screen_size: string | null
+          session_duration: number | null
           session_id: string
           start_time: string
           submitted_email: boolean | null
           user_agent: string | null
-          utm_campaign: string | null
-          utm_content: string | null
-          utm_source: string | null
         }
         Insert: {
+          browser?: string | null
+          clicked_vsl_button?: boolean | null
+          completed_quiz?: boolean | null
           created_at?: string | null
+          device_type?: string | null
           end_time?: string | null
           id?: string
           ip_address?: string | null
+          last_question_viewed?: number | null
+          operating_system?: string | null
+          quiz_progress?: Json | null
           referrer?: string | null
+          screen_size?: string | null
+          session_duration?: number | null
           session_id: string
           start_time?: string
           submitted_email?: boolean | null
           user_agent?: string | null
-          utm_campaign?: string | null
-          utm_content?: string | null
-          utm_source?: string | null
         }
         Update: {
+          browser?: string | null
+          clicked_vsl_button?: boolean | null
+          completed_quiz?: boolean | null
           created_at?: string | null
+          device_type?: string | null
           end_time?: string | null
           id?: string
           ip_address?: string | null
+          last_question_viewed?: number | null
+          operating_system?: string | null
+          quiz_progress?: Json | null
           referrer?: string | null
+          screen_size?: string | null
+          session_duration?: number | null
           session_id?: string
           start_time?: string
           submitted_email?: boolean | null
           user_agent?: string | null
-          utm_campaign?: string | null
-          utm_content?: string | null
-          utm_source?: string | null
         }
         Relationships: []
       }
