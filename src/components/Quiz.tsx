@@ -1,6 +1,7 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useQuiz } from '@/context/QuizContext';
+import { updateQuizProgress } from '@/lib/analytics';
 import QuizHeader from './QuizHeader';
 import GenderQuestion from './questions/GenderQuestion';
 import AgeQuestion from './questions/AgeQuestion';
@@ -16,7 +17,15 @@ import AnalyzingPage from './AnalyzingPage';
 import ResultsPage from './ResultsPage';
 
 const Quiz = () => {
-  const { currentQuestion } = useQuiz();
+  const { currentQuestion, quizData } = useQuiz();
+  
+  // Track quiz progress whenever the current question changes
+  useEffect(() => {
+    const sessionId = localStorage.getItem('quiz_session_id');
+    if (sessionId && currentQuestion >= 0 && currentQuestion < 11) {
+      updateQuizProgress(sessionId, currentQuestion, quizData);
+    }
+  }, [currentQuestion, quizData]);
 
   // Render the appropriate question based on the current question index
   const renderQuestion = () => {

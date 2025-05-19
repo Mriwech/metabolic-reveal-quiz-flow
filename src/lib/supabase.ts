@@ -11,6 +11,7 @@ export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 // Type for the quiz submissions
 export type QuizSubmission = {
   session_id: string;
+  user_session_id?: string;
   utm_source?: string;
   utm_medium?: string;
   utm_campaign?: string;
