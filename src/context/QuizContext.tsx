@@ -47,6 +47,7 @@ const QuizContext = createContext<QuizContextType | undefined>(undefined);
 export const QuizProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [quizData, setQuizData] = useState<QuizData>(initialQuizData);
+  const [sessionTracked, setSessionTracked] = useState(false);
 
   // Calculate additional metrics based on the user's inputs
   const isHighMotivation = quizData.currentWeight - quizData.targetWeight > 20;

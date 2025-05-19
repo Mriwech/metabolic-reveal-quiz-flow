@@ -55,6 +55,8 @@ export const trackSession = async () => {
     if (!sessionId) {
       sessionId = `session_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
       localStorage.setItem('quiz_session_id', sessionId);
+      // Store session start time for duration calculation
+      localStorage.setItem('session_start_time', new Date().toISOString());
     }
     
     // Get device information
@@ -64,31 +66,41 @@ export const trackSession = async () => {
     const operatingSystem = detectOS(userAgent);
     const screenSize = getScreenSize();
     
-    // Insert session data into Supabase
-    const { error } = await supabase
+    // First check if session already exists
+    const { data: existingSession } = await supabase
       .from('user_sessions')
-      .insert([{
-        session_id: sessionId,
-        start_time: new Date().toISOString(),
-        ip_address: '', // We can't reliably get this from the client side
-        user_agent: userAgent,
-        referrer: document.referrer,
-        device_type: deviceType,
-        browser: browser,
-        operating_system: operatingSystem,
-        screen_size: screenSize
-      }]);
-    
-    if (error) {
-      console.error('Error tracking session:', error);
-    } else {
-      console.log('Session tracked successfully');
+      .select('*')
+      .eq('session_id', sessionId)
+      .single();
       
-      // Set up a listener for when the user leaves the page
-      window.addEventListener('beforeunload', () => {
-        updateSessionEndTime(sessionId as string);
-      });
+    // If session doesn't exist, create it
+    if (!existingSession) {
+      // Insert session data into Supabase
+      const { error } = await supabase
+        .from('user_sessions')
+        .insert([{
+          session_id: sessionId,
+          start_time: new Date().toISOString(),
+          ip_address: 'client-side', // Real IP will be captured server-side
+          user_agent: userAgent,
+          referrer: document.referrer,
+          device_type: deviceType,
+          browser: browser,
+          operating_system: operatingSystem,
+          screen_size: screenSize
+        }]);
+      
+      if (error) {
+        console.error('Error tracking session:', error);
+      } else {
+        console.log('Session tracked successfully');
+      }
     }
+    
+    // Set up a listener for when the user leaves the page
+    window.addEventListener('beforeunload', () => {
+      updateSessionEndTime(sessionId as string);
+    });
     
     return sessionId;
   } catch (err) {
@@ -211,18 +223,36 @@ export const trackVSLButtonClick = async (sessionId: string) => {
  */
 export const getUserSessionIdBySessionId = async (sessionId: string): Promise<string | null> => {
   try {
+    // First check if session exists
     const { data, error } = await supabase
       .from('user_sessions')
       .select('id')
-      .eq('session_id', sessionId)
-      .single();
+      .eq('session_id', sessionId);
     
     if (error) {
       console.error('Error getting user session ID:', error);
       return null;
     }
     
-    return data?.id || null;
+    // If no session found, create one and return its ID
+    if (!data || data.length === 0) {
+      await trackSession(); // This will create a session
+      
+      // Try to get the ID again
+      const { data: newData, error: newError } = await supabase
+        .from('user_sessions')
+        .select('id')
+        .eq('session_id', sessionId);
+        
+      if (newError || !newData || newData.length === 0) {
+        console.error('Error getting new user session ID:', newError || 'No data');
+        return null;
+      }
+      
+      return newData[0]?.id || null;
+    }
+    
+    return data[0]?.id || null;
   } catch (err) {
     console.error('Error in getUserSessionIdBySessionId:', err);
     return null;

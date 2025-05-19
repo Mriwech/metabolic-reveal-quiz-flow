@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { ArrowRight, Play } from 'lucide-react';
-import { trackVSLButtonClick } from '@/lib/analytics';
+import { trackVSLButtonClick, trackSession } from '@/lib/analytics';
 
 const VSLPage = () => {
   const [videoLoaded, setVideoLoaded] = useState(false);
@@ -11,6 +11,13 @@ const VSLPage = () => {
   const [videoStarted, setVideoStarted] = useState(false);
 
   useEffect(() => {
+    // Initialize session tracking on page load
+    const initTracking = async () => {
+      await trackSession();
+    };
+    
+    initTracking();
+    
     // Simulate video loading
     const timer = setTimeout(() => {
       setVideoLoaded(true);
@@ -19,11 +26,11 @@ const VSLPage = () => {
     return () => clearTimeout(timer);
   }, []);
 
-  const handleButtonClick = () => {
+  const handleButtonClick = async () => {
     // Track the VSL button click
     const sessionId = localStorage.getItem('quiz_session_id');
     if (sessionId) {
-      trackVSLButtonClick(sessionId);
+      await trackVSLButtonClick(sessionId);
     }
     
     // Redirect to sales page or next step

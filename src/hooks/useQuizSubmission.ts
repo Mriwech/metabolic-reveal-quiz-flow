@@ -34,16 +34,18 @@ export const useQuizSubmission = (quizData: any) => {
       
       // Create session ID if not exists
       const sessionId = localStorage.getItem('quiz_session_id') || `session_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
-      localStorage.setItem('quiz_session_id', sessionId);
+      if (!localStorage.getItem('quiz_session_id')) {
+        localStorage.setItem('quiz_session_id', sessionId);
+      }
       
       // Get the user_session_id from the database using sessionId
       const userSessionId = await getUserSessionIdBySessionId(sessionId);
       
       // Update session to mark email submission
-      updateSessionSubmission(sessionId);
+      await updateSessionSubmission(sessionId);
       
       // Mark quiz as completed
-      markQuizCompleted(sessionId);
+      await markQuizCompleted(sessionId);
       
       // Prepare submission data
       const quizSubmission = {

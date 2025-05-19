@@ -13,14 +13,18 @@ import { useQuizSubmission } from '@/hooks/useQuizSubmission';
 const ResultsPage = () => {
   const { quizData, calculateMetabolicAge, calculateProjectedMonths, isHighMotivation, isUrgent } = useQuiz();
   const { email, emailValid, handleEmailChange } = useEmailValidation();
-  const { submitting, showLoader, setShowLoader, handleSubmit } = useQuizSubmission(quizData);
+  const { submitting, showLoader, setShowLoader, handleSubmit } = useQuizSubmission({...quizData, email});
   
   const metabolicAge = calculateMetabolicAge();
   const projectedMonths = calculateProjectedMonths();
   
   useEffect(() => {
     // Track user session when the results page is loaded
-    trackSession();
+    const initTracking = async () => {
+      await trackSession();
+    };
+    
+    initTracking();
   }, []);
 
   return (
