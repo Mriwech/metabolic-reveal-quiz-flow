@@ -158,35 +158,37 @@ const AnalyzingPage = () => {
         {message}
       </div>
       
-      {/* Add some global styles for the animations */}
-      <style jsx global>{`
-        @keyframes scanner-line {
-          0% { transform: translateY(0); opacity: 0.8; }
-          50% { transform: translateY(320px); opacity: 0.6; }
-          51% { opacity: 0; }
-          52% { transform: translateY(0); opacity: 0; }
-          53% { opacity: 0.8; }
-          100% { transform: translateY(320px); opacity: 0.6; }
-        }
-        
-        .typing-animation {
-          overflow: hidden;
-          border-right: 0.15em solid rgba(0, 255, 255, 0.5);
-          white-space: nowrap;
-          letter-spacing: 0.05em;
-          animation: typing 3.5s steps(40, end), blink-caret 0.75s step-end infinite;
-        }
-        
-        @keyframes typing {
-          from { width: 0 }
-          to { width: 100% }
-        }
-        
-        @keyframes blink-caret {
-          from, to { border-color: transparent }
-          50% { border-color: rgba(0, 255, 255, 0.5) }
-        }
-      `}</style>
+      {/* Add CSS styles directly without using jsx and global properties */}
+      <style>
+        {`
+          @keyframes scanner-line {
+            0% { transform: translateY(0); opacity: 0.8; }
+            50% { transform: translateY(320px); opacity: 0.6; }
+            51% { opacity: 0; }
+            52% { transform: translateY(0); opacity: 0; }
+            53% { opacity: 0.8; }
+            100% { transform: translateY(320px); opacity: 0.6; }
+          }
+          
+          .typing-animation {
+            overflow: hidden;
+            border-right: 0.15em solid rgba(0, 255, 255, 0.5);
+            white-space: nowrap;
+            letter-spacing: 0.05em;
+            animation: typing 3.5s steps(40, end), blink-caret 0.75s step-end infinite;
+          }
+          
+          @keyframes typing {
+            from { width: 0 }
+            to { width: 100% }
+          }
+          
+          @keyframes blink-caret {
+            from, to { border-color: transparent }
+            50% { border-color: rgba(0, 255, 255, 0.5) }
+          }
+        `}
+      </style>
     </div>
   );
 };
