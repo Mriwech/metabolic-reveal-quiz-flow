@@ -2,7 +2,6 @@
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { submitQuizData } from '@/lib/supabase';
-import { updateSessionSubmission, getUserSessionIdBySessionId, markQuizCompleted } from '@/lib/analytics';
 import { buildRedirectUrl } from '@/utils/redirectUtils';
 
 export const useQuizSubmission = (quizData: any) => {
@@ -11,7 +10,6 @@ export const useQuizSubmission = (quizData: any) => {
   
   const handleSubmit = async () => {
     setSubmitting(true);
-    setShowLoader(true);
     
     try {
       // Parse height into feet and inches
@@ -38,19 +36,9 @@ export const useQuizSubmission = (quizData: any) => {
         localStorage.setItem('quiz_session_id', sessionId);
       }
       
-      // Get the user_session_id from the database using sessionId
-      const userSessionId = await getUserSessionIdBySessionId(sessionId);
-      
-      // Update session to mark email submission
-      await updateSessionSubmission(sessionId);
-      
-      // Mark quiz as completed
-      await markQuizCompleted(sessionId);
-      
       // Prepare submission data
       const quizSubmission = {
         session_id: sessionId,
-        user_session_id: userSessionId,
         utm_source: utmSource || '',
         utm_campaign: utmCampaign || '',
         utm_content: utmContent || '',
@@ -144,15 +132,12 @@ export const useQuizSubmission = (quizData: any) => {
         );
       }
       
-      // Redirect after a short delay
-      setTimeout(() => {
-        window.location.href = redirectUrl;
-      }, 1500);
+      // Redirect immédiatement sans délai
+      window.location.href = redirectUrl;
       
     } catch (err) {
       console.error("Error in submission process:", err);
       setSubmitting(false);
-      setShowLoader(false);
       toast.error("Something went wrong", {
         description: "Please try again later"
       });

@@ -49,7 +49,7 @@ const EmailForm: React.FC<EmailFormProps> = ({
           {submitting ? (
             <>
               <Loader2 className="h-5 w-5 animate-spin" />
-              <span>Processing...</span>
+              <span>Sending...</span>
             </>
           ) : "SEND MY REPORT & WATCH VIDEO"}
         </Button>
