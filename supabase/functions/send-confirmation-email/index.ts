@@ -19,6 +19,13 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+// Array of email subjects for variation
+const emailSubjects = [
+  "+10 Years Metabolic Age? Reverse It Starting Today",
+  "Why Your Body's Burning Fat 43% Slower (And How to Fix It)",
+  "Fatigue, Stubborn Fat? Your Report Explains Everything"
+];
+
 serve(async (req) => {
   // Gestion des requêtes OPTIONS pour CORS
   if (req.method === 'OPTIONS') {
@@ -104,6 +111,9 @@ serve(async (req) => {
     // URL de confidentialité
     const privacyUrl = "https://mitolyn.com/privacy";
 
+    // Sélection aléatoire du sujet d'email
+    const randomSubject = emailSubjects[Math.floor(Math.random() * emailSubjects.length)];
+
     // Préparation des données dynamiques pour le template
     const templateData = {
       email: email,
@@ -116,6 +126,7 @@ serve(async (req) => {
     };
 
     console.log("Template data:", templateData);
+    console.log("Selected email subject:", randomSubject);
 
     // Vérifier que la clé API SendGrid est disponible
     if (!SENDGRID_API_KEY) {
@@ -140,6 +151,7 @@ serve(async (req) => {
       personalizations: [
         {
           to: [{ email }],
+          subject: randomSubject,
           dynamic_template_data: templateData
         },
       ],

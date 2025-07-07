@@ -7,8 +7,8 @@ export const buildRedirectUrl = (
   let redirectUrl = "https://mitolyn.com/science/?shield=34006jve54p94p7hmhxf2g7wbe";
   
   // Conversion des paramètres UTM vers ClickBank
-  // Si utm_source existe, l'utiliser comme traffic_source, sinon utiliser "direct"
-  const trafficSource = utmSource || "direct";
+  // Utiliser "quiz" comme traffic_source pour le bouton, "email" reste pour les newsletters
+  const trafficSource = "quiz";
   
   redirectUrl += `&traffic_source=${encodeURIComponent(trafficSource)}`;
   
