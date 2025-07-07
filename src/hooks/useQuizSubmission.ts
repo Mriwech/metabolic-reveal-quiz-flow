@@ -67,32 +67,36 @@ export const useQuizSubmission = (quizData: any) => {
       // Submit to Supabase
       const { success, error } = await submitQuizData(quizSubmission);
       
-      // Send confirmation email using SendGrid template - CORRECTED PARAMETERS
+      // Send confirmation email - simplified object without firstName
+      const emailPayload = {
+        email: quizData.email,
+        utmSource: utmSource,
+        utmCampaign: utmCampaign,
+        utmContent: utmContent
+      };
+      
+      console.log("Sending email with payload:", emailPayload);
+      
       const sendEmailResponse = await fetch("https://dzbjugabndesaikxgtpi.supabase.co/functions/v1/send-confirmation-email", {
         method: "POST",
         headers: {
           "Content-Type": "application/json"
         },
-        body: JSON.stringify({
-          email: quizData.email,
-          firstName: "", // Optionnel
-          utmSource: utmSource,
-          utmCampaign: utmCampaign,
-          utmContent: utmContent
-        })
+        body: JSON.stringify(emailPayload)
       });
       
       // Process email response
       let emailResult;
       try {
         emailResult = await sendEmailResponse.json();
+        console.log("Email response:", emailResult);
       } catch (e) {
         console.error("Could not parse email response:", e);
         emailResult = { error: "Could not parse response" };
       }
       
       // Handle email result
-      if (sendEmailResponse.ok) {
+      if (sendEmailResponse.ok && emailResult.success) {
         toast.success("Check your email!", {
           description: "Your full metabolic report has been sent"
         });

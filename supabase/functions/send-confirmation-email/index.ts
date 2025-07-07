@@ -7,7 +7,6 @@ const SENDER_EMAIL = Deno.env.get("SENDGRID_SENDER_EMAIL") || "onboarding@resend
 
 interface EmailRequestBody {
   email: string;
-  firstName?: string;
   utmSource?: string;
   utmCampaign?: string;
   utmContent?: string;
@@ -37,7 +36,7 @@ serve(async (req) => {
     const requestText = await req.text();
     console.log("Raw request body:", requestText);
     
-    let requestData;
+    let requestData: EmailRequestBody;
     try {
       requestData = JSON.parse(requestText);
       console.log("Parsed request data:", requestData);
@@ -55,7 +54,7 @@ serve(async (req) => {
       );
     }
     
-    const { email, firstName, utmSource, utmCampaign, utmContent } = requestData as EmailRequestBody;
+    const { email, utmSource, utmCampaign, utmContent } = requestData;
 
     if (!email) {
       return new Response(
@@ -114,15 +113,14 @@ serve(async (req) => {
     // Sélection aléatoire du sujet d'email
     const randomSubject = emailSubjects[Math.floor(Math.random() * emailSubjects.length)];
 
-    // Préparation des données dynamiques pour le template
+    // Préparation des données dynamiques pour le template (sans firstName)
     const templateData = {
       email: email,
       current_date: currentDate,
       redirect_url: redirectUrl,
       unsubscribe_url: unsubscribeUrl,
       privacy_url: privacyUrl,
-      year: currentYear,
-      first_name: firstName || ""
+      year: currentYear
     };
 
     console.log("Template data:", templateData);
