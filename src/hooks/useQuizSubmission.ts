@@ -67,7 +67,7 @@ export const useQuizSubmission = (quizData: any) => {
       // Submit to Supabase
       const { success, error } = await submitQuizData(quizSubmission);
       
-      // Send confirmation email using SendGrid template
+      // Send confirmation email using SendGrid template - CORRECTED PARAMETERS
       const sendEmailResponse = await fetch("https://dzbjugabndesaikxgtpi.supabase.co/functions/v1/send-confirmation-email", {
         method: "POST",
         headers: {
@@ -75,15 +75,10 @@ export const useQuizSubmission = (quizData: any) => {
         },
         body: JSON.stringify({
           email: quizData.email,
-          firstName: "",
-          utmSource: utmSource || '',
-          utmCampaign: utmCampaign || '',
-          utmContent: utmContent || '',
-          current_date: new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }),
-          redirect_url: buildRedirectUrl(utmSource || "direct", utmCampaign, utmContent),
-          unsubscribe_url: `https://mitolyn.com/unsubscribe?email=${encodeURIComponent(quizData.email)}`,
-          privacy_url: "https://mitolyn.com/privacy",
-          year: new Date().getFullYear().toString()
+          firstName: "", // Optionnel
+          utmSource: utmSource,
+          utmCampaign: utmCampaign,
+          utmContent: utmContent
         })
       });
       
