@@ -3,7 +3,7 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 
 const SENDGRID_API_KEY = Deno.env.get("SENDGRID_API_KEY");
 const BASE_REDIRECT_URL = Deno.env.get("BASE_REDIRECT_URL") || "https://mitolyn.com/science/?shield=34006jve54p94p7hmhxf2g7wbe";
-const SENDER_EMAIL = Deno.env.get("SENDGRID_SENDER_EMAIL") || "onboarding@resend.dev";
+const SENDER_EMAIL = Deno.env.get("SENDGRID_SENDER_EMAIL") || "noreply@mitolyn.com";
 
 interface EmailRequestBody {
   email: string;
@@ -12,13 +12,12 @@ interface EmailRequestBody {
   utmContent?: string;
 }
 
-// Headers CORS pour permettre les requêtes depuis le frontend
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-// Array of email subjects for variation
+// Email subject variations for better engagement
 const emailSubjects = [
   "+10 Years Metabolic Age? Reverse It Starting Today",
   "Why Your Body's Burning Fat 43% Slower (And How to Fix It)",
@@ -26,13 +25,12 @@ const emailSubjects = [
 ];
 
 serve(async (req) => {
-  // Gestion des requêtes OPTIONS pour CORS
+  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    // Décodage du corps de la requête
     const requestText = await req.text();
     console.log("Raw request body:", requestText);
     
@@ -56,6 +54,7 @@ serve(async (req) => {
     
     const { email, utmSource, utmCampaign, utmContent } = requestData;
 
+    // Validate required email field
     if (!email) {
       return new Response(
         JSON.stringify({ error: "Email is required" }),
@@ -69,7 +68,7 @@ serve(async (req) => {
       );
     }
 
-    // Validation simple de l'email
+    // Validate email format
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
       return new Response(
@@ -84,36 +83,29 @@ serve(async (req) => {
       );
     }
 
-    // Conversion des paramètres UTM vers ClickBank
+    // Convert UTM parameters to ClickBank format
     const clickBankParams = {
-      tid: utmCampaign || '',                 // Transaction ID
-      traffic_source: 'email',                // Source du trafic venant de l'email est toujours "email"
-      creative: utmContent || ''              // Version créative
+      tid: utmCampaign || '',
+      traffic_source: 'email',
+      creative: utmContent || ''
     };
 
-    // Construire l'URL de redirection avec les paramètres convertis
+    // Build redirect URL with converted parameters
     const redirectUrl = `${BASE_REDIRECT_URL}${clickBankParams.tid ? `&tid=${encodeURIComponent(clickBankParams.tid)}` : ''}${`&traffic_source=${encodeURIComponent(clickBankParams.traffic_source)}`}${clickBankParams.creative ? `&creative=${encodeURIComponent(clickBankParams.creative)}` : ''}`;
 
-    // Date actuelle formatée
+    // Prepare email template data
     const currentDate = new Date().toLocaleDateString('en-US', {
       month: 'long',
       day: 'numeric',
       year: 'numeric'
     });
-
-    // Année courante pour le copyright
     const currentYear = new Date().getFullYear().toString();
-
-    // URL de désinscription
     const unsubscribeUrl = `https://mitolyn.com/unsubscribe?email=${encodeURIComponent(email)}`;
-    
-    // URL de confidentialité
     const privacyUrl = "https://mitolyn.com/privacy";
 
-    // Sélection aléatoire du sujet d'email
+    // Select random email subject for better engagement
     const randomSubject = emailSubjects[Math.floor(Math.random() * emailSubjects.length)];
 
-    // Préparation des données dynamiques pour le template (sans firstName)
     const templateData = {
       email: email,
       current_date: currentDate,
@@ -126,7 +118,7 @@ serve(async (req) => {
     console.log("Template data:", templateData);
     console.log("Selected email subject:", randomSubject);
 
-    // Vérifier que la clé API SendGrid est disponible
+    // Verify SendGrid API key
     if (!SENDGRID_API_KEY) {
       console.error("SendGrid API key is not configured");
       return new Response(
@@ -144,7 +136,7 @@ serve(async (req) => {
       );
     }
 
-    // Préparation de la requête vers l'API SendGrid avec le template ID spécifié
+    // Prepare SendGrid request payload
     const sendgridPayload = {
       personalizations: [
         {
@@ -162,7 +154,7 @@ serve(async (req) => {
 
     console.log("Sending email with payload:", JSON.stringify(sendgridPayload));
 
-    // Envoi de l'email via SendGrid API
+    // Send email via SendGrid API
     const sendgridResponse = await fetch("https://api.sendgrid.com/v3/mail/send", {
       method: "POST",
       headers: {
@@ -192,7 +184,7 @@ serve(async (req) => {
       );
     }
 
-    // Réponse de succès avec l'URL de redirection
+    // Return success response with redirect URL
     return new Response(
       JSON.stringify({ 
         success: true,

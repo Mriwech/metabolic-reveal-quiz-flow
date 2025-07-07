@@ -4,6 +4,10 @@ import { toast } from 'sonner';
 import { submitQuizData } from '@/lib/supabase';
 import { buildRedirectUrl } from '@/utils/redirectUtils';
 
+/**
+ * Custom hook for handling quiz submission process
+ * Manages form submission, email sending, and redirection
+ */
 export const useQuizSubmission = (quizData: any) => {
   const [submitting, setSubmitting] = useState(false);
   const [showLoader, setShowLoader] = useState(false);
@@ -12,7 +16,7 @@ export const useQuizSubmission = (quizData: any) => {
     setSubmitting(true);
     
     try {
-      // Parse height into feet and inches
+      // Parse height from format "5'8"" to separate feet and inches
       let heightFt = 0;
       let heightIn = 0;
       
@@ -24,19 +28,19 @@ export const useQuizSubmission = (quizData: any) => {
         }
       }
       
-      // Get UTM parameters
+      // Extract UTM parameters from URL
       const urlParams = new URLSearchParams(window.location.search);
       const utmSource = urlParams.get('utm_source');
       const utmCampaign = urlParams.get('utm_campaign');
       const utmContent = urlParams.get('utm_content');
       
-      // Create session ID if not exists
+      // Create unique session ID for tracking
       const sessionId = localStorage.getItem('quiz_session_id') || `session_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
       if (!localStorage.getItem('quiz_session_id')) {
         localStorage.setItem('quiz_session_id', sessionId);
       }
       
-      // Prepare submission data
+      // Prepare quiz submission data for database
       const quizSubmission = {
         session_id: sessionId,
         utm_source: utmSource || '',
@@ -61,13 +65,13 @@ export const useQuizSubmission = (quizData: any) => {
         email: quizData.email || ''
       };
       
-      // Save to localStorage for backup
+      // Save quiz data locally as backup
       localStorage.setItem('quizData', JSON.stringify(quizData));
       
-      // Submit to Supabase
+      // Submit quiz data to Supabase database
       const { success, error } = await submitQuizData(quizSubmission);
       
-      // Send confirmation email - simplified object without firstName
+      // Prepare email payload for confirmation email
       const emailPayload = {
         email: quizData.email,
         utmSource: utmSource,
@@ -77,6 +81,7 @@ export const useQuizSubmission = (quizData: any) => {
       
       console.log("Sending email with payload:", emailPayload);
       
+      // Send confirmation email via edge function
       const sendEmailResponse = await fetch("https://dzbjugabndesaikxgtpi.supabase.co/functions/v1/send-confirmation-email", {
         method: "POST",
         headers: {
@@ -95,7 +100,7 @@ export const useQuizSubmission = (quizData: any) => {
         emailResult = { error: "Could not parse response" };
       }
       
-      // Handle email result
+      // Handle email sending result
       if (sendEmailResponse.ok && emailResult.success) {
         toast.success("Check your email!", {
           description: "Your full metabolic report has been sent"
@@ -107,7 +112,7 @@ export const useQuizSubmission = (quizData: any) => {
         });
       }
       
-      // Handle submission result
+      // Handle database submission result
       if (success) {
         toast.success("Data submitted successfully!", {
           description: "Redirecting you to your personalized solution..."
@@ -119,7 +124,7 @@ export const useQuizSubmission = (quizData: any) => {
         });
       }
       
-      // Get redirect URL
+      // Determine redirect URL (from email response or build locally)
       let redirectUrl;
       if (emailResult && emailResult.redirectUrl) {
         redirectUrl = emailResult.redirectUrl;
@@ -131,7 +136,7 @@ export const useQuizSubmission = (quizData: any) => {
         );
       }
       
-      // Redirect immédiatement sans délai
+      // Redirect to final destination
       window.location.href = redirectUrl;
       
     } catch (err) {
